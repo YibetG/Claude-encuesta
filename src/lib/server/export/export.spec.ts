@@ -131,8 +131,8 @@ describe('exportación a Excel', () => {
 		expect(resumen.getRow(tasa).getCell(2).numFmt).toBe('0%');
 
 		const porPregunta = wb.getWorksheet('Por pregunta')!;
-		expect(porPregunta.getRow(2).values).toEqual([
-			,
+		// `values` de ExcelJS empieza en el índice 1 (columna A).
+		expect((porPregunta.getRow(2).values as unknown[]).slice(1)).toEqual([
 			1,
 			'¿Qué es confidencialidad?',
 			'Acceso de autorizados',
