@@ -27,6 +27,7 @@ export function latestAnalyses(db: DB, assessmentId: string): Map<string, Stored
 			model: r.model,
 			createdAt: r.createdAt,
 			responseCount: r.responseCount,
+			inputHash: r.inputHash,
 			result: parsed.data
 		});
 	}

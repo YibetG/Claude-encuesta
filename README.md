@@ -46,6 +46,20 @@ npm run create-admin -- --reset --email ana@empresa.com  # cambiar contraseña (
   invitaciones o generar el mensaje para copiar, la app pide escribirla y verifica
   que sea la vigente. Nunca queda guardada en la base ni en la auditoría.
 
+### Análisis con IA (Anthropic)
+
+- Configure `ANTHROPIC_API_KEY` (y opcionalmente `ANTHROPIC_MODEL`, por defecto
+  `claude-opus-5-5`) en `.env`. La key solo se usa en el servidor.
+- En **Reportes**, cada pregunta abierta tiene "Analizar con IA"; también hay un
+  análisis global. Se analizan las entregas finales, sin filtros.
+- Antes de enviar, se quitan nombres, correos y teléfonos (se envía solo el texto de
+  las respuestas). Nombres de terceros que no son participantes pueden seguir en el texto.
+- Si el texto es largo se procesa en bloques y luego se consolida. El resultado se
+  guarda con fecha y modelo; si las respuestas no cambiaron no se vuelve a llamar a la IA
+  ("Regenerar" fuerza una nueva llamada). Cada análisis tiene costo según el uso de tokens.
+- Se activa el respaldo automático del servidor (`fallbacks: "default"`): si el modelo
+  declina una solicitud, Anthropic la reintenta con otro modelo adecuado.
+
 ## Comandos
 
 | Comando                    | Qué hace                                                        |

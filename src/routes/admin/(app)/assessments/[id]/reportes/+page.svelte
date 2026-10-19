@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import BarList, { type BarItem } from '#lib/components/BarList.svelte';
+	import AiAnalysisPanel from '#lib/components/AiAnalysisPanel.svelte';
 	import ParticipantStatusBadge from '#lib/components/ParticipantStatusBadge.svelte';
 	import { formatDateTime, formatPercent } from '#lib/format.ts';
 	import { ui } from '#lib/ui.ts';
 	import type { PageProps } from './$types';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 	const a = $derived(data.assessment);
 	const r = $derived(data.report);
 	const s = $derived(r.summary);
@@ -204,6 +205,26 @@
 			</article>
 		{/each}
 
+		{#if r.open.length}
+			<article class="{ui.card} border-l-4 border-indigo-400" aria-labelledby="global-titulo">
+				<h3 id="global-titulo" class="font-medium">Análisis global de las preguntas abiertas</h3>
+				<p class="mt-1 text-xs text-slate-500">
+					Combina todas las preguntas abiertas para encontrar temas transversales.
+					{#if hasFilters}El análisis con IA siempre usa todas las entregas (no aplica los filtros).{/if}
+				</p>
+				<div class="mt-4">
+					<AiAnalysisPanel
+						analysis={data.analyses.global}
+						action="?/analizarGlobal"
+						configured={data.ai.configured}
+						timezone={a.timezone}
+						error={form?.target === 'global' ? form?.aiError : undefined}
+						cachedNotice={form?.aiDone === 'global' && form?.cached}
+					/>
+				</div>
+			</article>
+		{/if}
+
 		{#each r.open as q (q.id)}
 			<article id="pregunta-{q.number}" class="{ui.card} scroll-mt-20">
 				<div class="flex flex-wrap items-start justify-between gap-3">
@@ -234,9 +255,20 @@
 						</ul>
 					{/if}
 				</details>
-				<p class="mt-3 text-xs text-slate-400">
-					El análisis con IA estará disponible en una próxima fase.
-				</p>
+				<div class="mt-4">
+					<AiAnalysisPanel
+						analysis={data.analyses[q.id]}
+						action="?/analizar"
+						questionId={q.id}
+						configured={data.ai.configured}
+						timezone={a.timezone}
+						stale={!hasFilters &&
+							!!data.analyses[q.id] &&
+							data.analyses[q.id].responseCount !== q.responses.length}
+						error={form?.target === q.id ? form?.aiError : undefined}
+						cachedNotice={form?.aiDone === q.id && form?.cached}
+					/>
+				</div>
 			</article>
 		{/each}
 	</section>

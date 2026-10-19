@@ -233,6 +233,11 @@ test('el reporte refleja la entrega: alineación, opciones y respuestas abiertas
 	await expect(q2.getByText('Ana Invitada')).toBeVisible();
 
 	await expect(page.getByRole('row', { name: /Ana Invitada.*Completado/ })).toBeVisible();
+
+	// Sin ANTHROPIC_API_KEY (entorno de pruebas) el análisis con IA explica cómo habilitarlo.
+	await expect(page.getByText('Análisis global de las preguntas abiertas')).toBeVisible();
+	await expect(page.getByText('configure ANTHROPIC_API_KEY').first()).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Analizar con IA' })).toHaveCount(0);
 });
 
 test('descarga el informe en Excel y PDF, y queda en la auditoría', async ({ page }) => {
