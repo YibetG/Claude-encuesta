@@ -50,7 +50,7 @@
 					type="email"
 					autocomplete="username"
 					required
-					value={form?.email ?? ''}
+					defaultValue={form?.email ?? ''}
 					class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
 				/>
 			</div>

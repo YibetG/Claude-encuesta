@@ -37,6 +37,15 @@ npm run create-admin -- --reset --email ana@empresa.com  # cambiar contraseña (
 - Si la app queda detrás de un proxy (Nginx, etc.), defina `ADDRESS_HEADER=X-Forwarded-For`
   y `XFF_DEPTH` para que el bloqueo por IP use la IP real del visitante.
 
+### Correo (invitaciones)
+
+- Sin `SMTP_HOST`, los correos **no se envían**: se imprimen en la consola del servidor.
+- Para probar en local con un buzón real, use [Mailpit](https://mailpit.axllent.org)
+  (`SMTP_HOST=localhost`, `SMTP_PORT=1025`) y abra http://localhost:8025.
+- La contraseña de acceso de cada assessment se guarda solo como hash: al enviar
+  invitaciones o generar el mensaje para copiar, la app pide escribirla y verifica
+  que sea la vigente. Nunca queda guardada en la base ni en la auditoría.
+
 ## Comandos
 
 | Comando                    | Qué hace                                                        |

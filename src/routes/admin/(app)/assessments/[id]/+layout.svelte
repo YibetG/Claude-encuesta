@@ -14,6 +14,14 @@
 		{
 			href: resolve('/admin/(app)/assessments/[id]/preguntas', { id: data.assessment.id }),
 			label: `Preguntas (${data.questionCounts.total})`
+		},
+		{
+			href: resolve('/admin/(app)/assessments/[id]/participantes', { id: data.assessment.id }),
+			label: `Participantes (${data.participantCount})`
+		},
+		{
+			href: resolve('/admin/(app)/assessments/[id]/invitaciones', { id: data.assessment.id }),
+			label: 'Invitaciones'
 		}
 	]);
 </script>
@@ -41,7 +49,6 @@
 				</a>
 			</li>
 		{/each}
-		<li class="px-1 py-2 text-slate-400" title="Disponible en una próxima fase">Participantes</li>
 		<li class="px-1 py-2 text-slate-400" title="Disponible en una próxima fase">Reportes</li>
 	</ul>
 </nav>

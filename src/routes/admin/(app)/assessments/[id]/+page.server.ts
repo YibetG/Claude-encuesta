@@ -7,26 +7,14 @@ import {
 } from '#lib/schemas/assessment.ts';
 import {
 	duplicateAssessment,
-	getAssessment,
 	publishProblems,
 	setAccessPassword,
 	setStatus,
 	updateAssessment
 } from '#lib/server/services/assessments.ts';
-import {
-	assertUuid,
-	assessmentToForm,
-	readAssessmentForm,
-	timezoneOptions
-} from '#lib/server/forms.ts';
+import { assessmentToForm, readAssessmentForm, timezoneOptions } from '#lib/server/forms.ts';
+import { requireAssessment } from '#lib/server/route-helpers.ts';
 import type { Actions, PageServerLoad } from './$types';
-
-function requireAssessment(id: string) {
-	assertUuid(id);
-	const a = getAssessment(db, id);
-	if (!a) error(404, 'Assessment no encontrado');
-	return a;
-}
 
 export const load: PageServerLoad = ({ params }) => {
 	const a = requireAssessment(params.id);

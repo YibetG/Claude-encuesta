@@ -1,14 +1,14 @@
-import { error } from '@sveltejs/kit';
+import { count, eq } from 'drizzle-orm';
 import { APP_URL } from '$app/env/private';
 import { db } from '#lib/server/db/index.ts';
-import { countQuestions, getAssessment, hasResponses } from '#lib/server/services/assessments.ts';
-import { assertUuid } from '#lib/server/forms.ts';
+import { participants } from '#lib/server/db/schema.ts';
+import { countQuestions, hasResponses } from '#lib/server/services/assessments.ts';
+import { publicLink } from '#lib/server/services/invitations.ts';
+import { requireAssessment } from '#lib/server/route-helpers.ts';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = ({ params }) => {
-	assertUuid(params.id);
-	const a = getAssessment(db, params.id);
-	if (!a) error(404, 'Assessment no encontrado');
+	const a = requireAssessment(params.id);
 
 	return {
 		// Campos explícitos: el hash de la contraseña de acceso nunca sale del servidor.
@@ -26,6 +26,9 @@ export const load: LayoutServerLoad = ({ params }) => {
 		},
 		locked: hasResponses(db, a.id),
 		questionCounts: countQuestions(db, a.id),
-		publicLink: `${APP_URL.replace(/\/$/, '')}/a/${a.slug}`
+		participantCount:
+			db.select({ n: count() }).from(participants).where(eq(participants.assessmentId, a.id)).get()
+				?.n ?? 0,
+		publicLink: publicLink(APP_URL, a.slug)
 	};
 };

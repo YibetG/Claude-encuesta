@@ -1,6 +1,6 @@
-import { error, fail } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.ts';
-import { getAssessment } from '#lib/server/services/assessments.ts';
+import { requireAssessment } from '#lib/server/route-helpers.ts';
 import {
 	listQuestionsForAdmin,
 	QuestionsLockedError,
@@ -10,15 +10,7 @@ import {
 import { MAX_QUESTIONS, questionIssues, questionListSchema } from '#lib/schemas/question.ts';
 import { ImportFileError, readTable } from '#lib/server/import/table.ts';
 import { parseQuestionRows } from '#lib/server/import/questions-import.ts';
-import { assertUuid } from '#lib/server/forms.ts';
 import type { Actions, PageServerLoad } from './$types';
-
-function requireAssessment(id: string) {
-	assertUuid(id);
-	const a = getAssessment(db, id);
-	if (!a) error(404, 'Assessment no encontrado');
-	return a;
-}
 
 export const load: PageServerLoad = ({ params }) => {
 	requireAssessment(params.id);
