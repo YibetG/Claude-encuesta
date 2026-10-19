@@ -22,6 +22,10 @@
 		{
 			href: resolve('/admin/(app)/assessments/[id]/invitaciones', { id: data.assessment.id }),
 			label: 'Invitaciones'
+		},
+		{
+			href: resolve('/admin/(app)/assessments/[id]/reportes', { id: data.assessment.id }),
+			label: 'Reportes'
 		}
 	]);
 </script>
@@ -49,7 +53,6 @@
 				</a>
 			</li>
 		{/each}
-		<li class="px-1 py-2 text-slate-400" title="Disponible en una próxima fase">Reportes</li>
 	</ul>
 </nav>
 

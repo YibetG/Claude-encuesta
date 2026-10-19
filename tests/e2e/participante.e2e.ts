@@ -204,3 +204,31 @@ test('el admin ve los estados y las preguntas quedan bloqueadas', async ({ page 
 	await page.goto(`/admin/assessments/${created.invitados.id}/preguntas`);
 	await expect(page.getByText('las preguntas no se pueden modificar')).toBeVisible();
 });
+
+test('el reporte refleja la entrega: alineación, opciones y respuestas abiertas', async ({
+	page
+}) => {
+	await loginAsAdmin(page);
+	await page.goto(`/admin/assessments/${created.invitados.id}/reportes`);
+
+	const tile = (label: string) => page.locator('dt', { hasText: label }).locator('xpath=../dd');
+	await expect(tile('Participantes')).toHaveText('1');
+	await expect(tile('Entregas')).toHaveText('1');
+	await expect(tile('Tasa de participación')).toHaveText('100%');
+	await expect(page.getByText('Alineación promedio').locator('xpath=..')).toContainText('100%');
+
+	const q1 = page.locator('#pregunta-1');
+	await expect(q1).toContainText('1 persona respondió · 1 eligió la opción esperada');
+	await expect(q1.getByText('✓ Esperada')).toBeVisible();
+	await expect(q1.getByRole('listitem').filter({ hasText: 'Que solo accedan' })).toContainText(
+		'1 · 100%'
+	);
+	await expect(q1.getByRole('listitem').filter({ hasText: 'pública' })).toContainText('0 · 0%');
+
+	const q2 = page.locator('#pregunta-2');
+	await q2.getByText('Ver 1 respuesta').click();
+	await expect(q2.getByText('Respuesta final.')).toBeVisible();
+	await expect(q2.getByText('Ana Invitada')).toBeVisible();
+
+	await expect(page.getByRole('row', { name: /Ana Invitada.*Completado/ })).toBeVisible();
+});
