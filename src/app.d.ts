@@ -3,8 +3,10 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		// Locals: se completa en la fase 1 (sesión de admin) y la fase 4 (sesión de participante).
-		// interface Locals {}
+		interface Locals {
+			/** Administrador con sesión válida, o `null`. Lo completa hooks.server.ts. */
+			admin: import('#lib/server/auth/admin-session.ts').SessionAdmin | null;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
