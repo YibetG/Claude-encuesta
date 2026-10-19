@@ -1,4 +1,6 @@
+import { copyFileSync, readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import ExcelJS from 'exceljs';
 import { createDb } from '../../src/lib/server/db/client';
 import { adminUsers } from '../../src/lib/server/db/schema';
 import { assessmentFormSchema } from '../../src/lib/schemas/assessment';
@@ -231,4 +233,45 @@ test('el reporte refleja la entrega: alineación, opciones y respuestas abiertas
 	await expect(q2.getByText('Ana Invitada')).toBeVisible();
 
 	await expect(page.getByRole('row', { name: /Ana Invitada.*Completado/ })).toBeVisible();
+});
+
+test('descarga el informe en Excel y PDF, y queda en la auditoría', async ({ page }) => {
+	await loginAsAdmin(page);
+	await page.goto(`/admin/assessments/${created.invitados.id}/reportes`);
+
+	const [excel] = await Promise.all([
+		page.waitForEvent('download'),
+		page.getByRole('link', { name: 'Descargar Excel' }).click()
+	]);
+	expect(excel.suggestedFilename()).toMatch(
+		/^informe-participante-invitados-\d{4}-\d{2}-\d{2}\.xlsx$/
+	);
+	const xlsxPath = test.info().outputPath('informe.xlsx');
+	await excel.saveAs(xlsxPath);
+	const wb = new ExcelJS.Workbook();
+	await wb.xlsx.readFile(xlsxPath);
+	expect(wb.worksheets.map((w) => w.name)).toEqual([
+		'Resumen',
+		'Por pregunta',
+		'Por participante',
+		'Respuestas abiertas'
+	]);
+	expect(wb.getWorksheet('Respuestas abiertas')!.getRow(2).getCell(7).value).toBe(
+		'Respuesta final.'
+	);
+
+	const [pdf] = await Promise.all([
+		page.waitForEvent('download'),
+		page.getByRole('link', { name: 'Descargar PDF' }).click()
+	]);
+	expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);
+	const pdfPath = test.info().outputPath('informe.pdf');
+	await pdf.saveAs(pdfPath);
+	expect(readFileSync(pdfPath).subarray(0, 5).toString()).toBe('%PDF-');
+	// Copia para revisión manual.
+	copyFileSync(pdfPath, 'test-results/ultimo-informe.pdf');
+
+	await page.goto('/admin/auditoria');
+	await expect(page.getByRole('row', { name: /Reporte exportado.*formato: Excel/ })).toBeVisible();
+	await expect(page.getByRole('row', { name: /Reporte exportado.*formato: PDF/ })).toBeVisible();
 });

@@ -14,11 +14,16 @@ export function formatPercent(rate: number | null, digits = 0): string {
 
 /** Formato largo para textos dirigidos a personas: "1 de noviembre de 2026, 8:00 a. m." */
 export function formatLongDateTime(date: Date | number, timeZone = DEFAULT_TIMEZONE): string {
-	return new Intl.DateTimeFormat('es-CO', {
-		dateStyle: 'long',
-		timeStyle: 'short',
-		timeZone
-	}).format(date);
+	return (
+		new Intl.DateTimeFormat('es-CO', {
+			dateStyle: 'long',
+			timeStyle: 'short',
+			timeZone
+		})
+			.format(date)
+			// Espacios no separables para que "6:00 p. m." no se parta entre líneas.
+			.replace(/ ([ap])\.\s?m\./g, ' $1. m.')
+	);
 }
 
 export function formatDateTime(date: Date | number, timeZone = DEFAULT_TIMEZONE): string {

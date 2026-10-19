@@ -64,6 +64,11 @@ export type Report = {
 	choice: ChoiceStat[];
 	open: OpenStat[];
 	participants: ParticipantRow[];
+	/**
+	 * Respuestas de cada participante que entregó: participantId → questionId → texto
+	 * (el texto de la opción elegida o la respuesta abierta). Se usa en las exportaciones.
+	 */
+	answersByParticipant: Record<string, Record<string, string>>;
 };
 
 const ratio = (a: number, b: number) => (b > 0 ? a / b : null);
@@ -143,6 +148,14 @@ export function buildReport(db: DB, assessmentId: string, filters: ReportFilters
 		}
 	});
 
+	const optionText = new Map(questions.flatMap((q) => q.options.map((o) => [o.id, o.text])));
+	const answersByParticipant: Report['answersByParticipant'] = {};
+	for (const r of rows) {
+		const value = r.optionId ? optionText.get(r.optionId) : r.text;
+		if (!value) continue;
+		(answersByParticipant[r.participantId] ??= {})[r.questionId] = value;
+	}
+
 	const answered = choice.filter((c) => c.alignmentRate !== null);
 	const sorted = [...answered].sort(
 		(a, b) => b.alignmentRate! - a.alignmentRate! || a.number - b.number
@@ -164,6 +177,7 @@ export function buildReport(db: DB, assessmentId: string, filters: ReportFilters
 		},
 		choice,
 		open,
-		participants
+		participants,
+		answersByParticipant
 	};
 }

@@ -55,6 +55,29 @@
 </svelte:head>
 
 <div class="space-y-8">
+	<!-- Descargas (respetan los filtros aplicados) -->
+	<div class="flex flex-wrap items-center justify-between gap-3">
+		<p class="text-sm text-slate-600">
+			{hasFilters
+				? 'Las descargas incluyen solo los participantes del filtro aplicado.'
+				: 'Descargue el informe completo.'}
+		</p>
+		<div class="flex gap-2">
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- se agrega la query de filtros -->
+			<a
+				href="{resolve('/admin/(app)/assessments/[id]/reportes/excel', { id: a.id })}{data.query}"
+				download
+				class={ui.btnSecondary}>Descargar Excel</a
+			>
+			<a
+				href="{resolve('/admin/(app)/assessments/[id]/reportes/pdf', { id: a.id })}{data.query}"
+				download
+				class={ui.btnPrimary}>Descargar PDF</a
+			>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		</div>
+	</div>
+
 	<!-- Filtros -->
 	{#if data.areas.length || data.cargos.length}
 		<form method="GET" class="flex flex-wrap items-end gap-3" data-sveltekit-keepfocus>
