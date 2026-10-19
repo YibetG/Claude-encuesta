@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { ACCESS_MODES, ASSESSMENT_STATUSES, QUESTION_TYPES } from '../../constants';
 
 // Esquema completo de la base de datos.
 // Convenciones:
@@ -49,9 +50,7 @@ export const adminSessions = sqliteTable(
 // Assessments y preguntas
 // ---------------------------------------------------------------
 
-export const ACCESS_MODES = ['invitados', 'abierto'] as const;
-export const ASSESSMENT_STATUSES = ['borrador', 'publicado', 'archivado'] as const;
-export const QUESTION_TYPES = ['opcion_unica', 'abierta'] as const;
+export { ACCESS_MODES, ASSESSMENT_STATUSES, QUESTION_TYPES };
 
 export const assessments = sqliteTable('assessments', {
 	id: id(),

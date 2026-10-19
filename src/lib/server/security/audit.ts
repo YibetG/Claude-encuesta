@@ -1,4 +1,4 @@
-import type { DB } from '../db/client';
+import type { Executor } from '../db/client';
 import { auditLog } from '../db/schema';
 
 /**
@@ -36,7 +36,7 @@ export type AuditEntry = {
 	ip?: string | null;
 };
 
-export function audit(db: DB, entry: AuditEntry): void {
+export function audit(db: Executor, entry: AuditEntry): void {
 	db.insert(auditLog)
 		.values({
 			adminId: entry.adminId,

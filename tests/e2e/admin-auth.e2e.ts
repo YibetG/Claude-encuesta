@@ -1,17 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
-import { E2E_ADMIN } from './fixtures';
-
-async function login(page: Page, email: string, password: string) {
-	await page.getByLabel('Email').fill(email);
-	await page.getByLabel('Contraseña').fill(password);
-	// Se espera la respuesta del servidor antes de seguir, para no encadenar envíos.
-	await Promise.all([
-		page.waitForResponse(
-			(r) => r.request().method() === 'POST' && r.url().includes('/admin/login')
-		),
-		page.getByRole('button', { name: 'Ingresar' }).click()
-	]);
-}
+import { expect, test } from '@playwright/test';
+import { E2E_ADMIN, submitLogin as login } from './fixtures';
 
 test('el panel exige iniciar sesión y conserva el destino', async ({ page }) => {
 	await page.goto('/admin/auditoria');

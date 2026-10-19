@@ -2,9 +2,13 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import Database from 'better-sqlite3';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import * as schema from './schema';
 
 export type DB = BetterSQLite3Database<typeof schema> & { $client: Database.Database };
+
+/** La base o una transacción: para funciones que pueden ejecutarse dentro de `db.transaction`. */
+export type Executor = BaseSQLiteDatabase<'sync', Database.RunResult, typeof schema>;
 
 /**
  * Abre (o crea) la base SQLite. Independiente de SvelteKit para poder usarse
