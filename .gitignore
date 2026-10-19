@@ -23,5 +23,8 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 # Playwright
 test-results
-# SQLite
+# SQLite (base de datos y sus archivos temporales WAL)
+/data/
 *.db
+*.db-wal
+*.db-shm
