@@ -3,7 +3,13 @@ import type { DB } from '../db/client';
 import { adminUsers } from '../db/schema';
 import { getDummyHash, hashPassword, verifyPassword } from '../auth/password';
 import { invalidateAllAdminSessions, type SessionAdmin } from '../auth/admin-session';
-import { clearFailures, limitKeys, lockedUntil, recordFailure } from '../security/rate-limit';
+import {
+	clearFailures,
+	limitKeys,
+	lockedUntil,
+	recordFailure,
+	withKeyLock
+} from '../security/rate-limit';
 import { audit } from '../security/audit';
 import type { CreateAdminInput } from '../../schemas/admin';
 
@@ -25,32 +31,41 @@ export async function authenticateAdmin(
 ): Promise<LoginResult> {
 	const keys = limitKeys(ADMIN_LOGIN_SCOPE, input.ip, input.email);
 
-	const blocked = lockedUntil(db, keys, now);
-	if (blocked) return { ok: false, reason: 'locked', until: blocked };
+	// Los intentos con la misma IP o el mismo email se procesan de a uno (ver withKeyLock).
+	return withKeyLock(
+		keys.map((k) => k.key),
+		async (): Promise<LoginResult> => {
+			const blocked = lockedUntil(db, keys, now);
+			if (blocked) return { ok: false, reason: 'locked', until: blocked };
 
-	const user = db.select().from(adminUsers).where(eq(adminUsers.email, input.email)).get();
-	// Siempre se ejecuta una verificación Argon2 para que el tiempo de respuesta sea parejo.
-	const valid = await verifyPassword(user?.passwordHash ?? (await getDummyHash()), input.password);
+			const user = db.select().from(adminUsers).where(eq(adminUsers.email, input.email)).get();
+			// Siempre se ejecuta una verificación Argon2 para que el tiempo de respuesta sea parejo.
+			const valid = await verifyPassword(
+				user?.passwordHash ?? (await getDummyHash()),
+				input.password
+			);
 
-	if (!user || !valid) {
-		const lockedNow = recordFailure(db, keys, now);
-		audit(db, {
-			adminId: user?.id ?? null,
-			action: 'admin.login_fallido',
-			metadata: { email: input.email },
-			ip: input.ip
-		});
-		return lockedNow
-			? { ok: false, reason: 'locked', until: lockedNow }
-			: { ok: false, reason: 'invalid' };
-	}
+			if (!user || !valid) {
+				const lockedNow = recordFailure(db, keys, now);
+				audit(db, {
+					adminId: user?.id ?? null,
+					action: 'admin.login_fallido',
+					metadata: { email: input.email },
+					ip: input.ip
+				});
+				return lockedNow
+					? { ok: false, reason: 'locked', until: lockedNow }
+					: { ok: false, reason: 'invalid' };
+			}
 
-	// Éxito: se limpia el contador del email (el de la IP se deja correr su ventana).
-	clearFailures(db, [keys[1].key]);
-	db.update(adminUsers).set({ lastLoginAt: now }).where(eq(adminUsers.id, user.id)).run();
-	audit(db, { adminId: user.id, action: 'admin.login', ip: input.ip });
+			// Éxito: se limpia el contador del email (el de la IP se deja correr su ventana).
+			clearFailures(db, [keys[1].key]);
+			db.update(adminUsers).set({ lastLoginAt: now }).where(eq(adminUsers.id, user.id)).run();
+			audit(db, { adminId: user.id, action: 'admin.login', ip: input.ip });
 
-	return { ok: true, admin: { id: user.id, email: user.email, name: user.name } };
+			return { ok: true, admin: { id: user.id, email: user.email, name: user.name } };
+		}
+	);
 }
 
 export class AdminExistsError extends Error {

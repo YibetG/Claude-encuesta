@@ -17,7 +17,15 @@ Entrega:
 Basa todo exclusivamente en las respuestas recibidas; no inventes datos ni cifras. Si las respuestas son pocas o muy breves, dilo en el resumen.`;
 
 const list = (responses: string[]) =>
-	responses.map((r, i) => `<respuesta n="${i + 1}">\n${r}\n</respuesta>`).join('\n');
+	responses.map((r, i) => `<respuesta n="${i + 1}">\n${escapeTags(r)}\n</respuesta>`).join('\n');
+
+/**
+ * Las respuestas no pueden cerrar los delimitadores (ej. escribir "</respuestas>" seguido
+ * de instrucciones): se neutralizan los signos < y >.
+ */
+export function escapeTags(text: string): string {
+	return text.replace(/</g, '‹').replace(/>/g, '›');
+}
 
 /** Análisis de una pregunta (o de un bloque de sus respuestas). */
 export function questionPrompt(opts: {
@@ -73,7 +81,7 @@ export function globalPrompt(opts: {
 	const body = opts.questions
 		.map(
 			(q, i) =>
-				`<pregunta n="${i + 1}" texto="${q.question.replaceAll('"', "'")}">\n${list(q.responses)}\n</pregunta>`
+				`<pregunta n="${i + 1}" texto="${escapeTags(q.question).replaceAll('"', "'")}">\n${list(q.responses)}\n</pregunta>`
 		)
 		.join('\n');
 	const total = opts.questions.reduce((s, q) => s + q.responses.length, 0);

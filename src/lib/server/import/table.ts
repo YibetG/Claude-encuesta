@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 
 export const MAX_IMPORT_BYTES = 2 * 1024 * 1024; // 2 MB
 export const MAX_IMPORT_ROWS = 2000;
+export const MAX_IMPORT_COLUMNS = 50;
 
 export type Table = { headers: string[]; rows: string[][] };
 
@@ -82,9 +83,21 @@ async function readXlsx(buffer: ArrayBuffer): Promise<string[][]> {
 	const sheet = wb.worksheets[0];
 	if (!sheet) throw new ImportFileError('El archivo Excel no tiene hojas.');
 
+	// Límites antes de recorrer: un archivo con una celda en la última columna/fila
+	// haría que el recorrido fuera enorme aunque el archivo pese poco.
+	if (sheet.columnCount > MAX_IMPORT_COLUMNS) {
+		throw new ImportFileError(
+			`El archivo tiene demasiadas columnas (máximo ${MAX_IMPORT_COLUMNS}).`
+		);
+	}
+	if (sheet.actualRowCount > MAX_IMPORT_ROWS + 1) {
+		throw new ImportFileError(`El archivo supera el máximo de ${MAX_IMPORT_ROWS} filas.`);
+	}
+
 	const rows: string[][] = [];
 	const width = sheet.columnCount;
-	sheet.eachRow({ includeEmpty: true }, (r) => {
+	// Sin includeEmpty: solo se recorren las filas con contenido.
+	sheet.eachRow((r) => {
 		const cells: string[] = [];
 		// `cell.text` resuelve texto enriquecido, fórmulas, números e hipervínculos.
 		for (let c = 1; c <= width; c++) cells.push(r.getCell(c).text ?? '');

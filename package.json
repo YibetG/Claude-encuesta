@@ -19,7 +19,9 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "tsx --env-file=.env scripts/migrate.ts",
 		"db:studio": "drizzle-kit studio",
-		"create-admin": "tsx --env-file=.env scripts/create-admin.ts"
+		"create-admin": "tsx --env-file=.env scripts/create-admin.ts",
+		"db:seed": "tsx --env-file=.env scripts/seed.ts",
+		"db:backup": "tsx --env-file=.env scripts/backup.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -65,6 +67,9 @@
 		"nodemailer": "^10.1.7",
 		"pdfmake": "^0.3.12",
 		"zod": "^4.6.7"
+	},
+	"overrides": {
+		"uuid": "^11.1.1"
 	},
 	"allowScripts": {
 		"better-sqlite3@13.0.3": true,

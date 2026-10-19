@@ -25,6 +25,7 @@ vite.config.ts.timestamp-*
 test-results
 # SQLite (base de datos y sus archivos temporales WAL)
 /data/
+/backups/
 *.db
 *.db-wal
 *.db-shm

@@ -277,6 +277,10 @@ test('descarga el informe en Excel y PDF, y queda en la auditoría', async ({ pa
 	copyFileSync(pdfPath, 'test-results/ultimo-informe.pdf');
 
 	await page.goto('/admin/auditoria');
-	await expect(page.getByRole('row', { name: /Reporte exportado.*formato: Excel/ })).toBeVisible();
-	await expect(page.getByRole('row', { name: /Reporte exportado.*formato: PDF/ })).toBeVisible();
+	await expect(
+		page.getByRole('row', { name: /Reporte exportado.*formato: Excel/ }).first()
+	).toBeVisible();
+	await expect(
+		page.getByRole('row', { name: /Reporte exportado.*formato: PDF/ }).first()
+	).toBeVisible();
 });

@@ -31,6 +31,15 @@ describe('anonimización', () => {
 	});
 });
 
+describe('nombres maliciosos', () => {
+	it('un "nombre" hecho de palabras comunes no borra el texto', () => {
+		const anon = createAnonymizer(['que para con', 'Ana Ruiz']);
+		expect(anon('Creo que para mejorar hay que hablar con Ruiz')).toBe(
+			'Creo que para mejorar hay que hablar con [persona]'
+		);
+	});
+});
+
 describe('rendimiento', () => {
 	it('anonimiza textos largos en poco tiempo', () => {
 		const anon = createAnonymizer(['Ana María Pérez', 'José Gómez']);

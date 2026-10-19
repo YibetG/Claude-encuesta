@@ -147,7 +147,7 @@ export async function buildExcel(meta: ExportMeta, report: Report): Promise<Arra
 		const answers = report.answersByParticipant[p.id] ?? {};
 		const row = porParticipante.addRow([
 			safeText(p.name),
-			p.email,
+			safeText(p.email),
 			safeText(p.area),
 			safeText(p.cargo),
 			STATUS_TEXT[p.status],
@@ -188,7 +188,7 @@ export async function buildExcel(meta: ExportMeta, report: Report): Promise<Arra
 				q.number,
 				safeText(q.prompt),
 				safeText(r.participantName),
-				r.email,
+				safeText(r.email),
 				safeText(r.area),
 				safeText(r.cargo),
 				safeText(r.text)

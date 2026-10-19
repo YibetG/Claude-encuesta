@@ -75,6 +75,21 @@ describe('sesiones de administrador', () => {
 		expect(renewed?.expiresAt).toEqual(new Date(late.getTime() + 12 * HOUR));
 	});
 
+	it('una sesión usada sin parar igual vence a los 7 días', () => {
+		const start = new Date('2026-05-01T10:00:00Z');
+		const { token } = createAdminSession(db, adminId, 12, start);
+		// Uso cada 5 horas: la expiración deslizante la mantiene viva…
+		let t = start.getTime();
+		for (let i = 0; i < 33; i++) {
+			t += 5 * HOUR;
+			expect(validateAdminSession(db, token, 12, new Date(t))).not.toBeNull();
+		}
+		// …pero nunca más allá de 7 días desde que se creó.
+		expect(
+			validateAdminSession(db, token, 12, new Date(start.getTime() + 7 * 24 * HOUR))
+		).toBeNull();
+	});
+
 	it('cierra una sesión o todas las del admin', () => {
 		const a = createAdminSession(db, adminId, 12);
 		const b = createAdminSession(db, adminId, 12);

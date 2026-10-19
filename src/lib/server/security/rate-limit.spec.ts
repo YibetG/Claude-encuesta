@@ -7,7 +7,8 @@ import {
 	limitKeys,
 	lockedUntil,
 	lockMessage,
-	recordFailure
+	recordFailure,
+	withKeyLock
 } from './rate-limit';
 
 const MIN = 60 * 1000;
@@ -72,6 +73,23 @@ describe('rate limiting', () => {
 		const admin = limitKeys('admin-login', '1.1.1.1', 'ana@ejemplo.com');
 		for (let i = 0; i < EMAIL_POLICY.maxFailures; i++) recordFailure(db, admin, at(0));
 		expect(lockedUntil(db, limitKeys('acceso', '1.1.1.1', 'ana@ejemplo.com'), at(1))).toBeNull();
+	});
+
+	it('withKeyLock atiende de a una las llamadas que comparten clave', async () => {
+		const log: string[] = [];
+		const task = (name: string, keys: string[], ms: number) =>
+			withKeyLock(keys, async () => {
+				log.push(`${name}:inicio`);
+				await new Promise((r) => setTimeout(r, ms));
+				log.push(`${name}:fin`);
+			});
+		await Promise.all([
+			task('A', ['ip:1', 'email:x'], 20),
+			task('B', ['ip:1', 'email:y'], 5), // comparte IP con A: espera
+			task('C', ['ip:2', 'email:z'], 1) // independiente: no espera
+		]);
+		expect(log.indexOf('B:inicio')).toBeGreaterThan(log.indexOf('A:fin'));
+		expect(log.indexOf('C:fin')).toBeLessThan(log.indexOf('A:fin'));
 	});
 
 	it('genera el mensaje en español con los minutos restantes', () => {

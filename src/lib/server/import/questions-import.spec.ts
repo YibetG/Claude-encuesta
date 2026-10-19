@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import ExcelJS from 'exceljs';
 import { normalizeHeader, parseCsv, readTable } from './table';
 import { buildQuestionTemplate, parseQuestionRows, TEMPLATE_HEADERS } from './questions-import';
 
@@ -107,6 +108,15 @@ describe('importación de preguntas', () => {
 		const r = parseQuestionRows(table);
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.questions.map((q) => q.type)).toEqual(['opcion_unica', 'abierta']);
+	});
+
+	it('rechaza Excel con dimensiones enormes antes de recorrerlo', async () => {
+		const wb = new ExcelJS.Workbook();
+		const ws = wb.addWorksheet('Hoja');
+		ws.getCell('A1').value = 'tipo';
+		ws.getCell('ZZ1').value = 'x'; // columna 702
+		const file = new File([await wb.xlsx.writeBuffer()], 'grande.xlsx');
+		await expect(readTable(file)).rejects.toThrow('demasiadas columnas');
 	});
 
 	it('rechaza formatos no soportados', async () => {

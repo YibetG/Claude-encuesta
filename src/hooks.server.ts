@@ -1,8 +1,13 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
+import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit/hooks';
 import { sequence } from '@sveltejs/kit/hooks';
-import { redirect } from '@sveltejs/kit';
 import { ADMIN_SESSION_HOURS } from '$app/env/private';
 import { db } from '#lib/server/db/index.ts';
+import { scheduleMaintenance } from '#lib/server/maintenance.ts';
+
+/** Al iniciar el servidor: limpieza de sesiones vencidas e intentos antiguos (y luego cada hora). */
+export const init: ServerInit = () => {
+	scheduleMaintenance(db);
+};
 import { applySecurityHeaders } from '#lib/server/security/headers.ts';
 import {
 	ADMIN_SESSION_COOKIE,
@@ -47,7 +52,12 @@ const adminGuard: Handle = async ({ event, resolve }) => {
 
 	if (!event.locals.admin && path !== '/admin/login') {
 		const destino = path + event.url.search;
-		redirect(303, `/admin/login?destino=${encodeURIComponent(destino)}`);
+		// Respuesta explícita (no `redirect()` lanzado) para que también reciba los
+		// encabezados de seguridad de `securityHeaders`.
+		return new Response(null, {
+			status: 303,
+			headers: { location: `/admin/login?destino=${encodeURIComponent(destino)}` }
+		});
 	}
 
 	const response = await resolve(event);

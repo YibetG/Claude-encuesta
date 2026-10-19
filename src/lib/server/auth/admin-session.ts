@@ -10,13 +10,15 @@ export const ADMIN_SESSION_COOKIE = 'admin_session';
 export type SessionAdmin = { id: string; email: string; name: string };
 
 const HOUR = 60 * 60 * 1000;
+/** Vida máxima de una sesión de administrador, aunque se use continuamente (7 días). */
+export const MAX_SESSION_HOURS = 7 * 24;
 
 /** Crea una sesión y devuelve el token (va solo en la cookie, nunca en la base). */
 export function createAdminSession(db: DB, adminId: string, hours: number, now = new Date()) {
 	const token = generateToken();
 	const expiresAt = new Date(now.getTime() + hours * HOUR);
 	db.insert(adminSessions)
-		.values({ id: hashToken(token), adminId, expiresAt })
+		.values({ id: hashToken(token), adminId, expiresAt, createdAt: now })
 		.run();
 	return { token, expiresAt };
 }
@@ -30,6 +32,7 @@ export function validateAdminSession(db: DB, token: string, hours: number, now =
 	const row = db
 		.select({
 			expiresAt: adminSessions.expiresAt,
+			createdAt: adminSessions.createdAt,
 			admin: { id: adminUsers.id, email: adminUsers.email, name: adminUsers.name }
 		})
 		.from(adminSessions)
@@ -39,14 +42,16 @@ export function validateAdminSession(db: DB, token: string, hours: number, now =
 
 	if (!row) return null;
 
-	if (row.expiresAt.getTime() <= now.getTime()) {
+	// Además del vencimiento por inactividad, una sesión nunca dura más de MAX_SESSION_HOURS.
+	const absoluteEnd = row.createdAt.getTime() + MAX_SESSION_HOURS * HOUR;
+	if (row.expiresAt.getTime() <= now.getTime() || absoluteEnd <= now.getTime()) {
 		db.delete(adminSessions).where(eq(adminSessions.id, id)).run();
 		return null;
 	}
 
 	let expiresAt = row.expiresAt;
 	if (expiresAt.getTime() - now.getTime() < (hours * HOUR) / 2) {
-		expiresAt = new Date(now.getTime() + hours * HOUR);
+		expiresAt = new Date(Math.min(now.getTime() + hours * HOUR, absoluteEnd));
 		db.update(adminSessions).set({ expiresAt }).where(eq(adminSessions.id, id)).run();
 	}
 

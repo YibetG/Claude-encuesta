@@ -12,6 +12,30 @@ export type RateLimitPolicy = {
 	lockMs: number;
 };
 
+// ---- Serialización por clave ----------------------------------------------------
+// La verificación de contraseña (Argon2) es asíncrona: sin esto, N peticiones simultáneas
+// pasarían todas el chequeo de bloqueo antes de que se registre el primer fallo.
+// Las peticiones con la misma IP o el mismo email se atienden de a una (la app corre
+// en un solo proceso, así que basta un candado en memoria).
+const queues = new Map<string, Promise<void>>();
+
+/** Ejecuta `fn` en exclusión mutua respecto de cualquier otra llamada que comparta alguna clave. */
+export async function withKeyLock<T>(keys: string[], fn: () => Promise<T>): Promise<T> {
+	// Orden fijo para evitar bloqueos cruzados entre claves.
+	const sorted = [...new Set(keys)].sort();
+	const previous = sorted.map((k) => queues.get(k) ?? Promise.resolve());
+	let release!: () => void;
+	const current = new Promise<void>((r) => (release = r));
+	for (const k of sorted) queues.set(k, current);
+	try {
+		await Promise.all(previous);
+		return await fn();
+	} finally {
+		release();
+		for (const k of sorted) if (queues.get(k) === current) queues.delete(k);
+	}
+}
+
 const MIN = 60 * 1000;
 
 /** Por email: pocos intentos, para frenar ataques a una cuenta concreta. */

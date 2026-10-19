@@ -49,6 +49,16 @@ describe('authenticateAdmin', { timeout: 30_000 }, () => {
 		expect(await login('ana@ejemplo.com', PASSWORD)).toMatchObject({ ok: false, reason: 'locked' });
 	});
 
+	it('intentos simultáneos no esquivan el bloqueo (sin carrera)', async () => {
+		const results = await Promise.all(
+			Array.from({ length: 12 }, (_, i) => login('ana@ejemplo.com', `mal-${i}`))
+		);
+		const invalid = results.filter((r) => !r.ok && r.reason === 'invalid').length;
+		// Solo 4 llegan a verificarse como "incorrecta"; el 5.º bloquea y el resto ve el bloqueo.
+		expect(invalid).toBe(4);
+		expect(results.filter((r) => !r.ok && r.reason === 'locked')).toHaveLength(8);
+	});
+
 	it('un ingreso exitoso reinicia el contador del email', async () => {
 		for (let i = 0; i < 4; i++) await login('ana@ejemplo.com', 'mal');
 		expect((await login('ana@ejemplo.com', PASSWORD)).ok).toBe(true);

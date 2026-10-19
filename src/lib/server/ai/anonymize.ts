@@ -14,10 +14,26 @@ const PHONE_RE = /\+?\d[\d\s().-]{5,20}\d/g;
 const strip = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/** Palabras de un nombre que vale la pena buscar (se omiten "de", "la" y otras cortas). */
+// Palabras comunes que nunca se tratan como parte de un nombre. En modo abierto el nombre
+// lo escribe el participante: sin esta lista, un "nombre" como "que para con" borraría
+// esas palabras de todas las respuestas y arruinaría el análisis.
+const STOPWORDS = new Set(
+	(
+		'que para con por los las del una uno unos unas como pero mas muy sin sobre entre ' +
+		'este esta esto ese esa eso son ser fue hay todo toda todos todas cuando donde ' +
+		'porque tambien desde hasta nos les sus mis tus equipo area empresa trabajo'
+	).split(' ')
+);
+
+/** Palabras de un nombre que vale la pena buscar (se omiten las cortas y las comunes). */
 function nameTokens(fullName: string): string[] {
-	const words = fullName.split(/\s+/).filter((w) => w.length >= 3);
-	return [fullName.trim(), ...words].filter(Boolean);
+	const words = fullName
+		.split(/\s+/)
+		.filter((w) => w.length >= 3 && !STOPWORDS.has(strip(w).toLowerCase()));
+	const full = fullName.trim();
+	// El nombre completo solo se usa si no es, él mismo, una sola palabra común.
+	const useFull = full && !STOPWORDS.has(strip(full).toLowerCase());
+	return [...(useFull ? [full] : []), ...words];
 }
 
 export type Anonymizer = (text: string) => string;

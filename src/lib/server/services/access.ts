@@ -8,7 +8,9 @@ import {
 	limitKeys,
 	lockedUntil,
 	PARTICIPANT_IP_POLICY,
-	recordFailure
+	recordFailure,
+	withKeyLock,
+	type LimitKey
 } from '../security/rate-limit';
 import type { Assessment } from './assessments';
 
@@ -60,6 +62,20 @@ export async function enterAssessment(
 	if (avail !== 'abierto') return { ok: false, reason: avail };
 
 	const keys = limitKeys(`acceso:${a.id}`, input.ip, input.email, PARTICIPANT_IP_POLICY);
+	// Los intentos con la misma IP o el mismo email se procesan de a uno (ver withKeyLock).
+	return withKeyLock(
+		keys.map((k) => k.key),
+		() => enterLocked(db, input, keys, now)
+	);
+}
+
+async function enterLocked(
+	db: DB,
+	input: { assessment: Assessment; email: string; password: string; name?: string | null },
+	keys: LimitKey[],
+	now: Date
+): Promise<EnterResult> {
+	const a = input.assessment;
 	const blocked = lockedUntil(db, keys, now);
 	if (blocked) return { ok: false, reason: 'locked', until: blocked };
 
@@ -118,7 +134,7 @@ export type ParticipantContext = {
 };
 
 export type ContextResult =
-	| ({ kind: 'ok' } & ParticipantContext)
+	| ({ kind: 'ok'; sessionExpiresAt: Date } & ParticipantContext)
 	| { kind: 'sin_sesion' }
 	| { kind: 'entregado' }
 	| { kind: Exclude<Availability, 'abierto'> };
@@ -165,6 +181,7 @@ export function getParticipantContext(
 		kind: 'ok',
 		assessment: row.assessment,
 		participant: row.participant,
-		submission: { id, startedAt, updatedAt }
+		submission: { id, startedAt, updatedAt },
+		sessionExpiresAt: session.expiresAt
 	};
 }
