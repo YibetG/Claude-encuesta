@@ -114,9 +114,10 @@
 
 	// Aviso al salir con cambios sin guardar.
 	beforeNavigate(({ cancel, type }) => {
-		if (dirty && type !== 'form' && !confirm('Hay cambios sin guardar. ¿Salir de todas formas?')) {
-			cancel();
-		}
+		// Al cerrar o recargar la pestaña ('leave') el navegador muestra su propio aviso
+		// (ver onBeforeUnload); confirm() no está permitido en ese momento.
+		if (!dirty || type === 'form' || type === 'leave') return;
+		if (!confirm('Hay cambios sin guardar. ¿Salir de todas formas?')) cancel();
 	});
 
 	function onBeforeUnload(e: BeforeUnloadEvent) {

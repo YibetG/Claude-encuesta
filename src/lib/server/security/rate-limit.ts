@@ -23,12 +23,27 @@ export const EMAIL_POLICY: RateLimitPolicy = {
 /** Por IP: más margen (varias personas pueden compartir IP en una oficina). */
 export const IP_POLICY: RateLimitPolicy = { maxFailures: 20, windowMs: 15 * MIN, lockMs: 15 * MIN };
 
+/**
+ * Ingreso de participantes por IP: en una empresa muchas personas salen a internet
+ * con la misma IP y responden a la vez, así que el margen es mayor.
+ */
+export const PARTICIPANT_IP_POLICY: RateLimitPolicy = {
+	maxFailures: 50,
+	windowMs: 15 * MIN,
+	lockMs: 15 * MIN
+};
+
 export type LimitKey = { key: string; policy: RateLimitPolicy };
 
 /** Construye las claves por IP y por email para un ámbito (ej. "admin-login"). */
-export function limitKeys(scope: string, ip: string, email: string): LimitKey[] {
+export function limitKeys(
+	scope: string,
+	ip: string,
+	email: string,
+	ipPolicy: RateLimitPolicy = IP_POLICY
+): LimitKey[] {
 	return [
-		{ key: `${scope}:ip:${ip}`, policy: IP_POLICY },
+		{ key: `${scope}:ip:${ip}`, policy: ipPolicy },
 		{ key: `${scope}:email:${email.trim().toLowerCase()}`, policy: EMAIL_POLICY }
 	];
 }
