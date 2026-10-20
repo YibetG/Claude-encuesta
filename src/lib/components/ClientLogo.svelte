@@ -1,7 +1,13 @@
 <script lang="ts">
 	// Logo del cliente en las pantallas del participante. Sin logo, se muestra el ícono de la plataforma.
-	let { src, size = 'md' }: { src: string | null; size?: 'sm' | 'md' } = $props();
-	const box = $derived(size === 'sm' ? 'h-9 max-w-28 px-1.5' : 'h-14 max-w-44 px-2.5');
+	let { src, size = 'md' }: { src: string | null; size?: 'sm' | 'md' | 'lg' } = $props();
+	const box = $derived(
+		{
+			sm: 'h-9 max-w-28 px-1.5',
+			md: 'h-14 max-w-44 px-2.5',
+			lg: 'h-16 max-w-48 px-3 sm:h-20 sm:max-w-60'
+		}[size]
+	);
 </script>
 
 {#if src}
@@ -11,9 +17,11 @@
 	</span>
 {:else}
 	<span
-		class="inline-flex items-center justify-center rounded-lg bg-brand-600 text-white {size === 'sm'
-			? 'h-8 w-8'
-			: 'h-10 w-10'}"
+		class="inline-flex items-center justify-center rounded-lg bg-brand-600 text-white {{
+			sm: 'h-8 w-8',
+			md: 'h-10 w-10',
+			lg: 'h-14 w-14'
+		}[size]}"
 		aria-hidden="true"
 	>
 		<svg
