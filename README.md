@@ -83,7 +83,12 @@ Los secretos van solo en `.env`, que nunca se sube al repositorio.
 1. **Crear el assessment:** título, descripción, instrucciones, fechas con zona horaria
    (por defecto America/Bogota), modo de acceso (solo invitados o abierto) y límite de
    caracteres de las respuestas abiertas (8.000 por defecto, unas dos páginas).
-2. **Preguntas:** en el editor, o importándolas con la plantilla de Excel descargable.
+2. **Preguntas:** en el editor, desde un **documento Word** o con la plantilla de Excel.
+   En Word: cada pregunta numerada (`1.`, `2.` o lista automática), sus opciones debajo con
+   letras o viñetas, y la respuesta correcta **subrayada o resaltada** (o con `(correcta)`
+   al final). Una pregunta sin opciones es abierta; `(opcional)` al final la deja no
+   obligatoria. Las preguntas leídas se cargan en el editor con avisos de lo que hay que
+   revisar, y solo se guardan al pulsar **Guardar preguntas**. Hay plantilla Word descargable.
    Cuando alguien empieza a responder, las preguntas quedan bloqueadas; para cambiarlas,
    duplique el assessment.
 3. **Contraseña de acceso, logo del cliente y publicación** (pestaña General). La
@@ -156,7 +161,7 @@ node --env-file=.env build      # escucha en el puerto 3000 (variables PORT y HO
   misma URL.
 - Detrás de un proxy, defina `ADDRESS_HEADER` y `XFF_DEPTH` para registrar y limitar por la
   IP real del visitante.
-- Para importar archivos de hasta 2 MB, defina `BODY_SIZE_LIMIT=3M`.
+- Para subir logos y archivos de importación (Word hasta 10 MB), defina `BODY_SIZE_LIMIT=11M`.
 - La app corre en **un solo proceso** (SQLite + candados en memoria): no levante varias
   instancias contra la misma base.
 

@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.ts';
 import { requireAssessment } from '#lib/server/route-helpers.ts';
+import { hasResponses } from '#lib/server/services/assessments.ts';
 import {
 	listQuestionsForAdmin,
 	QuestionsLockedError,
@@ -10,6 +11,10 @@ import {
 import { MAX_QUESTIONS, questionIssues, questionListSchema } from '#lib/schemas/question.ts';
 import { ImportFileError, readTable } from '#lib/server/import/table.ts';
 import { parseQuestionRows } from '#lib/server/import/questions-import.ts';
+import { readDocx } from '#lib/server/import/docx.ts';
+import { parseWordQuestions } from '#lib/server/import/questions-word.ts';
+
+const WORD_MAX_BYTES = 10 * 1024 * 1024;
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ params }) => {
@@ -85,5 +90,35 @@ export const actions: Actions = {
 		});
 		if (failed) return fail(409, { importErrors: failed.data.errors });
 		return { imported: result.questions.length, modo };
+	},
+
+	/**
+	 * Lee un Word y devuelve las preguntas SIN guardarlas: el navegador las carga en el editor
+	 * para revisarlas, y se guardan con "Guardar preguntas" (que valida todo de nuevo).
+	 */
+	leerWord: async ({ request, params }) => {
+		const a = requireAssessment(params.id);
+		if (hasResponses(db, a.id)) {
+			return fail(409, { wordErrors: ['Este assessment ya tiene respuestas.'] });
+		}
+		const file = (await request.formData()).get('documento');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { wordErrors: ['Seleccione un documento Word (.docx).'] });
+		}
+		if (file.size > WORD_MAX_BYTES) {
+			return fail(400, { wordErrors: ['El documento no puede superar 10 MB.'] });
+		}
+
+		let result;
+		try {
+			result = parseWordQuestions(readDocx(new Uint8Array(await file.arrayBuffer())));
+		} catch (e) {
+			if (e instanceof ImportFileError) return fail(400, { wordErrors: [e.message] });
+			throw e;
+		}
+		if (!result.ok) return fail(400, { wordErrors: result.errors });
+		return {
+			word: { fileName: file.name, questions: result.questions, warnings: result.warnings }
+		};
 	}
 };
