@@ -259,6 +259,43 @@ export function setStatus(
 	});
 }
 
+/** Cuánto se borraría con el assessment (para la confirmación y la auditoría). */
+export function deletionSummary(db: Executor, id: string) {
+	return db.get<{ questions: number; participants: number; submitted: number }>(sql`
+		select
+			(select count(*) from "questions" where "assessment_id" = ${id}) as "questions",
+			(select count(*) from "participants" where "assessment_id" = ${id}) as "participants",
+			(select count(*) from "submissions"
+				where "assessment_id" = ${id} and "submitted_at" is not null) as "submitted"
+	`);
+}
+
+/**
+ * Elimina definitivamente un assessment. Las claves foráneas borran en cascada sus preguntas,
+ * opciones, participantes, sesiones, respuestas, análisis de IA y registro de correos.
+ * La auditoría se conserva, con el título y los conteos de lo que se borró.
+ */
+export function deleteAssessment(db: DB, a: Assessment, adminId: string, ip?: string) {
+	db.transaction((tx) => {
+		const summary = deletionSummary(tx, a.id);
+		tx.delete(assessments).where(eq(assessments.id, a.id)).run();
+		audit(tx, {
+			adminId,
+			action: 'assessment.eliminado',
+			entityType: 'assessment',
+			entityId: a.id,
+			metadata: {
+				titulo: a.title,
+				estado: a.status,
+				preguntas: summary.questions,
+				participantes: summary.participants,
+				entregas: summary.submitted
+			},
+			ip
+		});
+	});
+}
+
 /**
  * Duplica un assessment con sus preguntas y opciones (no copia participantes,
  * respuestas ni la contraseña de acceso). La copia queda en borrador.

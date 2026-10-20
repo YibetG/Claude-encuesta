@@ -15,6 +15,7 @@ export const AUDIT_ACTIONS = {
 	'assessment.editado': 'Assessment editado',
 	'assessment.duplicado': 'Assessment duplicado',
 	'assessment.archivado': 'Assessment archivado',
+	'assessment.eliminado': 'Assessment eliminado',
 	'assessment.password_cambiada': 'Contraseña de acceso cambiada',
 	'assessment.password_vista': 'Contraseña de acceso consultada',
 	'preguntas.editadas': 'Preguntas editadas',

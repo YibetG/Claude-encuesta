@@ -4,6 +4,8 @@ import { createTestDb } from '../db/test-db';
 import { adminUsers, auditLog, participants, questionOptions, submissions } from '../db/schema';
 import {
 	createAssessment,
+	deleteAssessment,
+	deletionSummary,
 	duplicateAssessment,
 	generateSlug,
 	getAssessment,
@@ -218,5 +220,41 @@ describe('contraseña de acceso visible y logo', () => {
 		expect(copy.logoData?.equals(PNG)).toBe(true);
 		setLogo(db, a.id, null, adminId);
 		expect(getAssessment(db, a.id)!.logoData).toBeNull();
+	});
+
+	it('eliminar borra todo lo asociado, deja la auditoría y no toca otros assessments', () => {
+		const a = createAssessment(db, input, adminId);
+		const otro = createAssessment(db, input, adminId);
+		replaceQuestions(db, a.id, preguntas, adminId);
+		replaceQuestions(db, otro.id, preguntas, adminId);
+		const p = db
+			.insert(participants)
+			.values({ assessmentId: a.id, name: 'Ana', email: 'ana@x.co' })
+			.returning()
+			.get();
+		db.insert(submissions)
+			.values({ assessmentId: a.id, participantId: p.id, submittedAt: new Date() })
+			.run();
+
+		expect(deletionSummary(db, a.id)).toEqual({ questions: 2, participants: 1, submitted: 1 });
+		deleteAssessment(db, getAssessment(db, a.id)!, adminId, '::1');
+
+		expect(getAssessment(db, a.id)).toBeUndefined();
+		expect(db.select().from(participants).all()).toHaveLength(0);
+		expect(db.select().from(submissions).all()).toHaveLength(0);
+		expect(listQuestionsForAdmin(db, a.id)).toHaveLength(0);
+		expect(listQuestionsForAdmin(db, otro.id)).toHaveLength(2);
+
+		const log = db.select().from(auditLog).where(eq(auditLog.action, 'assessment.eliminado')).get();
+		expect(log).toMatchObject({
+			entityId: a.id,
+			metadata: {
+				titulo: 'Evaluación de seguridad',
+				estado: 'borrador',
+				preguntas: 2,
+				participantes: 1,
+				entregas: 1
+			}
+		});
 	});
 });

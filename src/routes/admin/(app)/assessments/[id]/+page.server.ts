@@ -7,6 +7,8 @@ import {
 	themeSchema
 } from '#lib/schemas/assessment.ts';
 import {
+	deleteAssessment,
+	deletionSummary,
 	duplicateAssessment,
 	LOGO_MAX_BYTES,
 	LogoError,
@@ -27,7 +29,8 @@ export const load: PageServerLoad = ({ params }) => {
 	return {
 		values: assessmentToForm(a),
 		timezones: timezoneOptions(),
-		publishProblems: publishProblems(db, a)
+		publishProblems: publishProblems(db, a),
+		deletion: deletionSummary(db, a.id)
 	};
 };
 
@@ -141,6 +144,19 @@ export const actions: Actions = {
 		const a = requireAssessment(params.id);
 		setStatus(db, a, 'archivado', locals.admin!.id, getClientAddress());
 		return { statusChanged: 'archivado' as const };
+	},
+
+	/** Borrado definitivo: exige escribir el título exacto como confirmación. */
+	eliminar: async ({ request, params, locals, getClientAddress }) => {
+		const a = requireAssessment(params.id);
+		const typed = String((await request.formData()).get('confirmacion') ?? '').trim();
+		if (typed !== a.title.trim()) {
+			return fail(400, {
+				deleteError: 'Escriba el título exacto del assessment para confirmar la eliminación.'
+			});
+		}
+		deleteAssessment(db, a, locals.admin!.id, getClientAddress());
+		redirect(303, '/admin?eliminado=1');
 	},
 
 	duplicar: ({ params, locals, getClientAddress }) => {

@@ -168,6 +168,28 @@ test('archivar oculta el assessment de la lista', async ({ page }) => {
 	await expect(page.getByRole('link', { name: titulo })).toBeVisible();
 });
 
+test('eliminar un assessment de prueba exige escribir su título', async ({ page }) => {
+	const titulo = 'Assessment de prueba para eliminar';
+	const url = await crearAssessment(page, titulo);
+	await page.goto(url);
+
+	const boton = page.getByRole('button', { name: 'Eliminar definitivamente' });
+	await expect(page.getByText('No se puede deshacer.')).toBeVisible();
+	await expect(boton).toBeDisabled();
+	await page.getByLabel('Para confirmar, escriba el título').fill('otro título');
+	await expect(boton).toBeDisabled();
+
+	await page.getByLabel('Para confirmar, escriba el título').fill(titulo);
+	page.once('dialog', (d) => d.accept());
+	await boton.click();
+	await expect(page).toHaveURL(/\/admin\?eliminado=1$/);
+	await expect(page.getByText('Assessment eliminado.')).toBeVisible();
+	await expect(page.getByRole('link', { name: titulo })).toHaveCount(0);
+
+	const res = await page.goto(url);
+	expect(res?.status()).toBe(404);
+});
+
 test('un id inexistente devuelve 404', async ({ page }) => {
 	const res = await page.goto('/admin/assessments/00000000-0000-0000-0000-000000000000');
 	expect(res?.status()).toBe(404);

@@ -19,6 +19,7 @@
 	let { data, form }: PageProps = $props();
 
 	const a = $derived(data.assessment);
+	let confirmTitle = $state('');
 	let copiado = $state(false);
 	let copiadoClave = $state(false);
 
@@ -527,5 +528,50 @@
 			timezones={data.timezones}
 			submitLabel="Guardar cambios"
 		/>
+	</section>
+
+	<!-- Eliminación definitiva (pensada para assessments de prueba) -->
+	<section class="rounded-2xl border border-red-200 bg-white p-6" aria-labelledby="eliminar-titulo">
+		<h2 id="eliminar-titulo" class="text-base font-semibold text-red-800">Eliminar assessment</h2>
+		<p class="mt-1 text-sm text-slate-700">
+			Se borrarán para siempre el assessment y todo lo asociado:
+			<strong>{data.deletion.questions}</strong>
+			{data.deletion.questions === 1 ? 'pregunta' : 'preguntas'},
+			<strong>{data.deletion.participants}</strong>
+			{data.deletion.participants === 1 ? 'participante' : 'participantes'} y
+			<strong>{data.deletion.submitted}</strong>
+			{data.deletion.submitted === 1 ? 'entrega' : 'entregas'}, con sus respuestas, reportes y
+			análisis. No se puede deshacer. Si solo quiere ocultarlo, use <em>Archivar</em>.
+		</p>
+		<form
+			method="POST"
+			action="?/eliminar"
+			class="mt-4 flex flex-wrap items-end gap-3"
+			use:enhance={({ cancel }) => {
+				if (!confirm(`¿Eliminar definitivamente "${a.title}"? Esta acción no se puede deshacer.`)) {
+					return cancel();
+				}
+			}}
+		>
+			<div class="min-w-64 flex-1">
+				<label for="confirmacion" class={ui.label}>
+					Para confirmar, escriba el título: <span class="font-semibold">{a.title}</span>
+				</label>
+				<input
+					id="confirmacion"
+					name="confirmacion"
+					bind:value={confirmTitle}
+					autocomplete="off"
+					spellcheck="false"
+					class={ui.input}
+				/>
+			</div>
+			<button class={ui.btnDanger} disabled={confirmTitle.trim() !== a.title.trim()}>
+				Eliminar definitivamente
+			</button>
+		</form>
+		{#if form?.deleteError}
+			<p class="mt-2 {ui.fieldError}" role="alert">{form.deleteError}</p>
+		{/if}
 	</section>
 </div>

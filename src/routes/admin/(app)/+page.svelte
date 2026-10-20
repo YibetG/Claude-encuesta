@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import StatusBadge from '#lib/components/StatusBadge.svelte';
 	import { formatPercent, formatShortDate } from '#lib/format.ts';
 	import { ui } from '#lib/ui.ts';
@@ -51,6 +52,10 @@
 			Nuevo assessment
 		</a>
 	</div>
+
+	{#if page.url.searchParams.get('eliminado') === '1'}
+		<p class={ui.alertSuccess} role="status">Assessment eliminado.</p>
+	{/if}
 
 	<!-- Indicadores -->
 	<dl class="grid grid-cols-2 gap-4 lg:grid-cols-4">
