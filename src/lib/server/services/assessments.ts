@@ -3,6 +3,7 @@ import { asc, desc, eq, ne, sql } from 'drizzle-orm';
 import type { DB, Executor } from '../db/client';
 import { assessments, questionOptions, questions, submissions } from '../db/schema';
 import { hashPassword } from '../auth/password';
+import { decryptSecret, encryptSecret } from '../security/secret-box';
 import { audit } from '../security/audit';
 import type { AssessmentFormInput } from '../../schemas/assessment';
 
@@ -36,7 +37,13 @@ export function listAssessments(db: DB, { includeArchived = false } = {}) {
 			// de la tabla en las columnas, y "id" quedaría ambiguo dentro de la subconsulta.
 			questionCount: sql<number>`(select count(*) from "questions" q where q."assessment_id" = "assessments"."id")`,
 			participantCount: sql<number>`(select count(*) from "participants" p where p."assessment_id" = "assessments"."id")`,
-			submittedCount: sql<number>`(select count(*) from "submissions" s where s."assessment_id" = "assessments"."id" and s."submitted_at" is not null)`
+			submittedCount: sql<number>`(select count(*) from "submissions" s where s."assessment_id" = "assessments"."id" and s."submitted_at" is not null)`,
+			inProgressCount: sql<number>`(select count(*) from "submissions" s where s."assessment_id" = "assessments"."id" and s."submitted_at" is null)`,
+			notInvitedCount: sql<number>`(select count(*) from "participants" p where p."assessment_id" = "assessments"."id" and p."invited_at" is null)`,
+			hasPassword: sql<boolean>`"assessments"."access_password_hash" is not null`.mapWith(Boolean),
+			slug: assessments.slug,
+			logoMime: assessments.logoMime,
+			logoUpdatedAt: assessments.logoUpdatedAt
 		})
 		.from(assessments)
 		.where(includeArchived ? undefined : ne(assessments.status, 'archivado'))
@@ -92,7 +99,7 @@ export async function setAccessPassword(
 ) {
 	const accessPasswordHash = await hashPassword(password);
 	db.update(assessments)
-		.set({ accessPasswordHash, updatedAt: new Date() })
+		.set({ accessPasswordHash, accessPasswordEnc: encryptSecret(password), updatedAt: new Date() })
 		.where(eq(assessments.id, id))
 		.run();
 	audit(db, {
@@ -100,6 +107,73 @@ export async function setAccessPassword(
 		action: 'assessment.password_cambiada',
 		entityType: 'assessment',
 		entityId: id,
+		ip
+	});
+}
+
+/** Contraseña de acceso vigente en texto, o `null` si solo existe el hash (definida antes). */
+export function readAccessPassword(a: Pick<Assessment, 'accessPasswordEnc'>): string | null {
+	return a.accessPasswordEnc ? decryptSecret(a.accessPasswordEnc) : null;
+}
+
+/** Muestra la contraseña al admin y deja constancia en la auditoría. */
+export function revealAccessPassword(db: DB, a: Assessment, adminId: string, ip?: string) {
+	const password = readAccessPassword(a);
+	if (password !== null) {
+		audit(db, {
+			adminId,
+			action: 'assessment.password_vista',
+			entityType: 'assessment',
+			entityId: a.id,
+			ip
+		});
+	}
+	return password;
+}
+
+export const LOGO_MAX_BYTES = 512 * 1024;
+const LOGO_TYPES = {
+	'image/png': (b: Buffer) =>
+		b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+	'image/jpeg': (b: Buffer) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+	'image/webp': (b: Buffer) =>
+		b.subarray(0, 4).toString('latin1') === 'RIFF' &&
+		b.subarray(8, 12).toString('latin1') === 'WEBP'
+} as const;
+export type LogoMime = keyof typeof LOGO_TYPES;
+
+export class LogoError extends Error {}
+
+/**
+ * Valida el logo por su contenido (no por la extensión ni el tipo que declara el navegador).
+ * SVG no se acepta: puede contener scripts.
+ */
+export function detectLogoType(data: Buffer): LogoMime {
+	if (data.length === 0) throw new LogoError('Seleccione una imagen.');
+	if (data.length > LOGO_MAX_BYTES) throw new LogoError('El logo no puede superar 512 KB.');
+	for (const [mime, check] of Object.entries(LOGO_TYPES) as [LogoMime, (b: Buffer) => boolean][]) {
+		if (check(data)) return mime;
+	}
+	throw new LogoError('Formato no soportado. Use una imagen PNG, JPG o WebP.');
+}
+
+export function setLogo(db: DB, id: string, data: Buffer | null, adminId: string, ip?: string) {
+	const mime = data ? detectLogoType(data) : null;
+	db.update(assessments)
+		.set({
+			logoData: data,
+			logoMime: mime,
+			logoUpdatedAt: data ? new Date() : null,
+			updatedAt: new Date()
+		})
+		.where(eq(assessments.id, id))
+		.run();
+	audit(db, {
+		adminId,
+		action: 'assessment.editado',
+		entityType: 'assessment',
+		entityId: id,
+		metadata: { cambio: data ? 'logo actualizado' : 'logo eliminado' },
 		ip
 	});
 }
@@ -180,6 +254,10 @@ export function duplicateAssessment(db: DB, id: string, adminId: string, ip?: st
 				openMaxChars: original.openMaxChars,
 				inviteSubject: original.inviteSubject,
 				inviteBody: original.inviteBody,
+				// El logo del cliente se conserva en la copia (la contraseña no).
+				logoData: original.logoData,
+				logoMime: original.logoMime,
+				logoUpdatedAt: original.logoUpdatedAt,
 				status: 'borrador',
 				duplicatedFromId: original.id,
 				createdById: adminId

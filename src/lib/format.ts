@@ -26,6 +26,11 @@ export function formatLongDateTime(date: Date | number, timeZone = DEFAULT_TIMEZ
 	);
 }
 
+/** Fecha corta: "18 oct 2026". */
+export function formatShortDate(date: Date | number, timeZone = DEFAULT_TIMEZONE): string {
+	return new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone }).format(date);
+}
+
 export function formatDateTime(date: Date | number, timeZone = DEFAULT_TIMEZONE): string {
 	return new Intl.DateTimeFormat('es-CO', {
 		dateStyle: 'medium',

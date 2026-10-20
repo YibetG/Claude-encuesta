@@ -86,12 +86,14 @@ Los secretos van solo en `.env`, que nunca se sube al repositorio.
 2. **Preguntas:** en el editor, o importándolas con la plantilla de Excel descargable.
    Cuando alguien empieza a responder, las preguntas quedan bloqueadas; para cambiarlas,
    duplique el assessment.
-3. **Contraseña de acceso y publicación** (pestaña General).
+3. **Contraseña de acceso, logo del cliente y publicación** (pestaña General). La
+   contraseña se puede generar al azar, ver mientras se escribe y volver a mostrar después.
+   El logo aparece al participante y en la portada del PDF (en el PDF solo PNG o JPG).
 4. **Participantes:** manual o con la plantilla de Excel/CSV (nombre, email, área, cargo y
    columnas adicionales).
 5. **Invitaciones:** plantilla editable con variables (`{{nombre}}`, `{{enlace}}`,
    `{{contrasena}}`, `{{inicio}}`, `{{fin}}`…), envío por correo o mensaje para copiar.
-   Como la contraseña se guarda cifrada, la app pide escribirla al invitar.
+   La contraseña vigente se incluye automáticamente.
 6. **Reportes:** resumen, alineación por pregunta con gráficos, respuestas abiertas, tabla
    por participante, filtros por área y cargo, análisis con IA y descargas en Excel y PDF.
 
@@ -131,6 +133,9 @@ npm run db:backup -- --keep 14             # conserva solo los 14 respaldos más
   del servidor.
 - **Restaurar:** detenga la app, reemplace el archivo de `DATABASE_URL` por el respaldo,
   borre los archivos `-wal` y `-shm` que estén al lado, y vuelva a iniciar.
+- **Respalde también la clave de cifrado** (`data/clave-cifrado.key`, o anote
+  `ACCESS_PASSWORD_KEY`). Sin ella las contraseñas de acceso no se pueden mostrar (el
+  ingreso de los participantes sigue funcionando, porque usa el hash).
 
 ## Despliegue en producción
 
@@ -153,8 +158,13 @@ node --env-file=.env build      # escucha en el puerto 3000 (variables PORT y HO
 
 ## Seguridad
 
-- **Contraseñas:** Argon2id (administradores y contraseña compartida de cada assessment).
-  La contraseña compartida nunca se guarda en claro.
+- **Contraseñas:** Argon2id para los administradores. La contraseña compartida de cada
+  assessment se valida con su hash Argon2id y, además, se guarda **cifrada** (AES-256-GCM)
+  para que el admin pueda verla y no tenga que escribirla al invitar. La clave de cifrado
+  está fuera de la base (`ACCESS_PASSWORD_KEY` o el archivo `clave-cifrado.key`), y cada vez
+  que alguien muestra una contraseña queda registrado en la auditoría.
+- **Logos:** solo PNG, JPG o WebP de hasta 512 KB, validados por su contenido (no por la
+  extensión). SVG no se acepta porque puede contener código.
 - **Sesiones** en la base (solo se guarda el hash del token), cookies `HttpOnly`, `Secure`,
   `SameSite=Lax`, con vencimiento por inactividad. La de admin tiene además un tope de 7
   días; la de participante solo sirve para su assessment.

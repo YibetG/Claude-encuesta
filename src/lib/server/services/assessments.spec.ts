@@ -8,8 +8,13 @@ import {
 	generateSlug,
 	getAssessment,
 	listAssessments,
+	detectLogoType,
+	LogoError,
 	publishProblems,
+	readAccessPassword,
+	revealAccessPassword,
 	setAccessPassword,
+	setLogo,
 	setStatus
 } from './assessments';
 import { listQuestionsForAdmin, QuestionsLockedError, replaceQuestions } from './questions';
@@ -159,5 +164,57 @@ describe('preguntas', () => {
 		expect(
 			db.select().from(submissions).where(eq(submissions.assessmentId, copy.id)).all()
 		).toHaveLength(0);
+	});
+});
+
+// PNG mínimo válido (1×1) para las pruebas de logo.
+const PNG = Buffer.from(
+	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+	'base64'
+);
+
+describe('contraseña de acceso visible y logo', () => {
+	it('guarda la contraseña cifrada, permite verla y lo registra en auditoría', async () => {
+		const a = createAssessment(db, input, adminId);
+		await setAccessPassword(db, a.id, 'clave-visible-1', adminId);
+		const saved = getAssessment(db, a.id)!;
+		expect(saved.accessPasswordEnc).toMatch(/^v1:/);
+		expect(saved.accessPasswordEnc).not.toContain('clave-visible-1');
+		expect(readAccessPassword(saved)).toBe('clave-visible-1');
+
+		expect(revealAccessPassword(db, saved, adminId, '10.0.0.1')).toBe('clave-visible-1');
+		const vistas = db
+			.select()
+			.from(auditLog)
+			.all()
+			.filter((r) => r.action === 'assessment.password_vista');
+		expect(vistas).toHaveLength(1);
+		expect(JSON.stringify(vistas)).not.toContain('clave-visible-1');
+	});
+
+	it('una contraseña definida antes (solo hash) no se puede ver', () => {
+		const a = createAssessment(db, input, adminId);
+		expect(readAccessPassword(a)).toBeNull();
+		expect(revealAccessPassword(db, a, adminId)).toBeNull();
+	});
+
+	it('detecta el tipo del logo por su contenido y rechaza lo demás', () => {
+		expect(detectLogoType(PNG)).toBe('image/png');
+		expect(detectLogoType(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0]))).toBe('image/jpeg');
+		expect(() =>
+			detectLogoType(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>'))
+		).toThrow(LogoError);
+		expect(() => detectLogoType(Buffer.alloc(0))).toThrow('Seleccione una imagen');
+		expect(() => detectLogoType(Buffer.concat([PNG, Buffer.alloc(600 * 1024)]))).toThrow('512 KB');
+	});
+
+	it('guarda, quita y copia el logo al duplicar', () => {
+		const a = createAssessment(db, input, adminId);
+		setLogo(db, a.id, PNG, adminId);
+		expect(getAssessment(db, a.id)!.logoMime).toBe('image/png');
+		const copy = duplicateAssessment(db, a.id, adminId)!;
+		expect(copy.logoData?.equals(PNG)).toBe(true);
+		setLogo(db, a.id, null, adminId);
+		expect(getAssessment(db, a.id)!.logoData).toBeNull();
 	});
 });

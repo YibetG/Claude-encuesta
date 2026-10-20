@@ -127,7 +127,7 @@
 							name="accessMode"
 							value={mode}
 							checked={values.accessMode === mode}
-							class="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+							class="mt-0.5 text-brand-600 focus:ring-brand-500"
 						/>
 						<span>
 							{ACCESS_MODE_LABELS[mode]}

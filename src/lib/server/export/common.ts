@@ -10,6 +10,8 @@ export type ExportMeta = {
 	period: string;
 	generatedAt: string;
 	filtersLabel: string;
+	/** Logo del cliente como data URL (solo PNG/JPEG: los formatos que admite el PDF). */
+	logoDataUrl?: string;
 };
 
 export function exportMeta(a: Assessment, filters: ReportFilters, now = new Date()): ExportMeta {
@@ -23,7 +25,11 @@ export function exportMeta(a: Assessment, filters: ReportFilters, now = new Date
 		timezone: a.timezone,
 		period: `Del ${formatLongDateTime(a.startsAt, a.timezone)} al ${formatLongDateTime(a.endsAt, a.timezone)}`,
 		generatedAt: formatLongDateTime(now, a.timezone),
-		filtersLabel: parts.length ? parts.join(' · ') : 'Todos los participantes'
+		filtersLabel: parts.length ? parts.join(' · ') : 'Todos los participantes',
+		logoDataUrl:
+			a.logoData && (a.logoMime === 'image/png' || a.logoMime === 'image/jpeg')
+				? `data:${a.logoMime};base64,${a.logoData.toString('base64')}`
+				: undefined
 	};
 }
 

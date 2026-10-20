@@ -155,7 +155,7 @@
 								name="destinatarios"
 								value="sin_invitar"
 								checked
-								class="text-indigo-600"
+								class="text-brand-600"
 							/>
 							Quienes aún no han recibido invitación ({data.recipientCounts.sin_invitar})
 						</label>
@@ -164,26 +164,48 @@
 								type="radio"
 								name="destinatarios"
 								value="no_completados"
-								class="text-indigo-600"
+								class="text-brand-600"
 							/>
 							Todos los que no han entregado ({data.recipientCounts.no_completados}) — recordatorio
 						</label>
 					</div>
 				</fieldset>
-				<div>
-					<label for="send-password" class={ui.label}>Contraseña de acceso vigente</label>
-					<input
-						id="send-password"
-						name="password"
-						type="password"
-						autocomplete="off"
-						required
-						class={ui.input}
-					/>
-					<p class={ui.hint}>
-						Se guarda cifrada y no se puede consultar: escríbala para incluirla en el mensaje.
+				{#if data.passwordStored}
+					<p class="flex items-center gap-2 text-sm text-slate-600">
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="text-brand-700"
+							aria-hidden="true"
+							><rect x="4" y="11" width="16" height="10" rx="2"></rect><path
+								d="M8 11V7a4 4 0 0 1 8 0v4"
+							></path></svg
+						>
+						El mensaje incluirá automáticamente la contraseña de acceso vigente.
 					</p>
-				</div>
+				{:else}
+					<div>
+						<label for="send-password" class={ui.label}>Contraseña de acceso vigente</label>
+						<input
+							id="send-password"
+							name="password"
+							type="password"
+							autocomplete="off"
+							required
+							class={ui.input}
+						/>
+						<p class={ui.hint}>
+							Se definió antes de poder consultarse: escríbala para incluirla en el mensaje (o
+							defínala de nuevo en General).
+						</p>
+					</div>
+				{/if}
 				<button class={ui.btnPrimary} disabled={enviando || a.status !== 'publicado'}>
 					{enviando ? 'Enviando…' : 'Enviar invitaciones'}
 				</button>
@@ -210,17 +232,19 @@
 				Genera un mensaje general (sin nombre) para enviarlo por chat u otro medio.
 			</p>
 			<form method="POST" action="?/copiar" class="mt-4 flex flex-wrap items-end gap-3" use:enhance>
-				<div class="grow">
-					<label for="copy-password" class={ui.label}>Contraseña de acceso vigente</label>
-					<input
-						id="copy-password"
-						name="password"
-						type="password"
-						autocomplete="off"
-						required
-						class={ui.input}
-					/>
-				</div>
+				{#if !data.passwordStored}
+					<div class="grow">
+						<label for="copy-password" class={ui.label}>Contraseña de acceso vigente</label>
+						<input
+							id="copy-password"
+							name="password"
+							type="password"
+							autocomplete="off"
+							required
+							class={ui.input}
+						/>
+					</div>
+				{/if}
 				<button class={ui.btnSecondary}>Generar mensaje</button>
 			</form>
 			{#if form?.copyError}

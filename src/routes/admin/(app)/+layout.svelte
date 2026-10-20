@@ -6,45 +6,127 @@
 	let { data, children }: LayoutProps = $props();
 
 	const links = [
-		{ href: resolve('/admin/(app)'), label: 'Assessments', exact: true },
-		{ href: resolve('/admin/(app)/auditoria'), label: 'Auditoría', exact: false }
+		{
+			href: resolve('/admin/(app)'),
+			label: 'Assessments',
+			icon: 'grid',
+			exclude: resolve('/admin/(app)/auditoria')
+		},
+		{ href: resolve('/admin/(app)/auditoria'), label: 'Auditoría', icon: 'clock', exclude: '' }
 	];
 
-	function isActive(href: string, exact: boolean) {
-		return exact ? page.url.pathname === href : page.url.pathname.startsWith(href);
+	function isActive(href: string, exclude: string) {
+		const p = page.url.pathname;
+		if (exclude && p.startsWith(exclude)) return false;
+		return p === href || p.startsWith(href + '/');
 	}
+
+	const initials = $derived(
+		data.admin.name
+			.split(/\s+/)
+			.slice(0, 2)
+			.map((w) => w[0]?.toUpperCase() ?? '')
+			.join('')
+	);
 </script>
 
-<header class="border-b border-slate-200 bg-white">
-	<div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-		<a href={resolve('/admin/(app)')} class="font-semibold text-slate-900">Assessments</a>
+<div class="flex min-h-screen flex-wrap bg-canvas lg:flex-nowrap">
+	<!-- Barra lateral (en pantallas angostas queda arriba) -->
+	<header
+		class="flex w-full flex-col gap-6 bg-ink-950 px-5 py-6 text-ink-300 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0"
+	>
+		<a href={resolve('/admin/(app)')} class="flex items-center gap-2.5 text-white">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600"
+				aria-hidden="true"
+			>
+				<svg
+					width="18"
+					height="18"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					><path d="M9 11l3 3 8-8"></path><path
+						d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"
+					></path></svg
+				>
+			</span>
+			<span class="font-display text-lg font-extrabold">Assessments</span>
+		</a>
 
-		<nav aria-label="Principal" class="flex gap-1">
+		<nav aria-label="Principal" class="flex flex-row flex-wrap gap-1 lg:flex-col">
 			{#each links as link (link.href)}
 				<a
 					href={link.href}
-					aria-current={isActive(link.href, link.exact) ? 'page' : undefined}
-					class="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 aria-[current=page]:bg-indigo-50 aria-[current=page]:font-medium aria-[current=page]:text-indigo-700"
+					aria-current={isActive(link.href, link.exclude) ? 'page' : undefined}
+					class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-ink-300 hover:bg-ink-900 hover:text-white aria-[current=page]:bg-ink-900 aria-[current=page]:font-semibold aria-[current=page]:text-white"
 				>
+					{#if link.icon === 'grid'}
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect
+								x="14"
+								y="3"
+								width="7"
+								height="7"
+								rx="1.5"
+							></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect
+								x="14"
+								y="14"
+								width="7"
+								height="7"
+								rx="1.5"
+							></rect></svg
+						>
+					{:else}
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							><path d="M12 8v4l3 2"></path><circle cx="12" cy="12" r="9"></circle></svg
+						>
+					{/if}
 					{link.label}
 				</a>
 			{/each}
 		</nav>
 
-		<div class="ml-auto flex items-center gap-3 text-sm">
-			<span class="text-slate-600">{data.admin.name}</span>
-			<form method="POST" action={resolve('/admin/logout')}>
-				<button
-					type="submit"
-					class="rounded-md px-3 py-1.5 text-slate-600 ring-1 ring-slate-300 hover:bg-slate-50 hover:text-slate-900"
-				>
-					Cerrar sesión
-				</button>
-			</form>
+		<div class="flex items-center gap-3 border-t border-ink-800 pt-5 lg:mt-auto">
+			<span
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-900 text-xs font-semibold text-white"
+				aria-hidden="true">{initials}</span
+			>
+			<div class="flex min-w-0 flex-col">
+				<span class="truncate text-sm font-semibold text-white">{data.admin.name}</span>
+				<form method="POST" action={resolve('/admin/logout')}>
+					<button type="submit" class="text-sm text-ink-400 hover:text-white hover:underline">
+						Cerrar sesión
+					</button>
+				</form>
+			</div>
 		</div>
-	</div>
-</header>
+	</header>
 
-<main class="mx-auto max-w-6xl px-4 py-8">
-	{@render children()}
-</main>
+	<main class="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-10">
+		<div class="mx-auto max-w-6xl">
+			{@render children()}
+		</div>
+	</main>
+</div>

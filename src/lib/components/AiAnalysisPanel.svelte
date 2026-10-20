@@ -29,7 +29,7 @@
 	let working = $state(false);
 
 	const freqStyle = {
-		alta: 'bg-indigo-100 text-indigo-900 ring-indigo-300',
+		alta: 'bg-brand-100 text-brand-900 ring-brand-300',
 		media: 'bg-slate-100 text-slate-800 ring-slate-300',
 		baja: 'bg-white text-slate-600 ring-slate-200'
 	};
@@ -139,7 +139,7 @@
 			<h4 class="mt-4 text-sm font-semibold">Citas representativas</h4>
 			<ul class="mt-2 space-y-2">
 				{#each r.quotes as q, i (i)}
-					<li class="border-l-2 border-indigo-300 pl-3 text-sm text-slate-700 italic">“{q}”</li>
+					<li class="border-l-2 border-brand-300 pl-3 text-sm text-slate-700 italic">“{q}”</li>
 				{/each}
 			</ul>
 		{/if}

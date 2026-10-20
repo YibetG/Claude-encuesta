@@ -4,6 +4,7 @@ import { db } from '#lib/server/db/index.ts';
 import { participants } from '#lib/server/db/schema.ts';
 import { countQuestions, hasResponses } from '#lib/server/services/assessments.ts';
 import { publicLink } from '#lib/server/services/invitations.ts';
+import { logoUrl } from '#lib/server/logo.ts';
 import { requireAssessment } from '#lib/server/route-helpers.ts';
 import type { LayoutServerLoad } from './$types';
 
@@ -22,7 +23,10 @@ export const load: LayoutServerLoad = ({ params }) => {
 			openMaxChars: a.openMaxChars,
 			startsAt: a.startsAt,
 			endsAt: a.endsAt,
-			hasPassword: !!a.accessPasswordHash
+			hasPassword: !!a.accessPasswordHash,
+			// Solo si se puede descifrar: la contraseña en sí se pide aparte (y queda en auditoría).
+			passwordViewable: !!a.accessPasswordEnc,
+			logoUrl: logoUrl(a)
 		},
 		locked: hasResponses(db, a.id),
 		questionCounts: countQuestions(db, a.id),

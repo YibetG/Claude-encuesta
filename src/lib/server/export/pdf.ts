@@ -12,10 +12,10 @@ import { FREQUENCY_LABELS, type StoredAnalysis } from '../../ai-analysis';
 
 // Paleta (validada para contraste): acento para lo destacado, gris para el resto.
 const C = {
-	ink: '#0f172a',
-	muted: '#64748b',
-	accent: '#4f46e5',
-	accentSoft: '#e0e7ff',
+	ink: '#0e1726',
+	muted: '#5b6474',
+	accent: '#0b7a6e',
+	accentSoft: '#e2f3f0',
 	bar: '#94a3b8',
 	rule: '#e2e8f0'
 };
@@ -193,7 +193,12 @@ export function buildPdfDefinition(
 	const s = report.summary;
 
 	const cover: Content[] = [
-		{ text: 'Informe de resultados', style: 'kicker', margin: [0, 180, 0, 8] },
+		meta.logoDataUrl ? { image: meta.logoDataUrl, fit: [160, 70], margin: [0, 110, 0, 0] } : '',
+		{
+			text: 'Informe de resultados',
+			style: 'kicker',
+			margin: [0, meta.logoDataUrl ? 36 : 180, 0, 8]
+		},
 		{ text: meta.title, style: 'coverTitle' },
 		meta.description ? { text: meta.description, style: 'coverText', margin: [0, 12, 0, 0] } : '',
 		{

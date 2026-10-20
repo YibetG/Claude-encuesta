@@ -96,21 +96,18 @@ test('plantilla, envío de invitaciones y mensaje para copiar', async ({ page })
 	await page.getByRole('button', { name: 'Guardar plantilla' }).click();
 	await expect(page.getByText('Plantilla guardada.')).toBeVisible();
 
-	// Contraseña equivocada.
-	page.on('dialog', (d) => d.accept());
-	await page.getByLabel('Contraseña de acceso vigente').first().fill('equivocada');
-	await page.getByRole('button', { name: 'Enviar invitaciones' }).click();
-	await expect(page.getByRole('alert')).toHaveText(
-		'La contraseña no coincide con la contraseña de acceso vigente.'
-	);
+	// La contraseña vigente está guardada cifrada: se incluye sola, sin escribirla.
+	await expect(
+		page.getByText('El mensaje incluirá automáticamente la contraseña de acceso vigente.')
+	).toBeVisible();
+	await expect(page.getByLabel('Contraseña de acceso vigente')).toHaveCount(0);
 
-	await page.getByLabel('Contraseña de acceso vigente').first().fill(ACCESS_PASSWORD);
+	page.on('dialog', (d) => d.accept());
 	await page.getByRole('button', { name: 'Enviar invitaciones' }).click();
 	await expect(page.getByText('Se enviaron 2 de 2 invitaciones.')).toBeVisible();
 	await expect(page.getByText('Quienes aún no han recibido invitación (0)')).toBeVisible();
 
 	// Mensaje genérico para copiar.
-	await page.getByLabel('Contraseña de acceso vigente').nth(1).fill(ACCESS_PASSWORD);
 	await page.getByRole('button', { name: 'Generar mensaje' }).click();
 	const generic = page.locator('#generic');
 	await expect(generic).toHaveValue(/^Invitación: Clima de seguridad\n\nHola,/);

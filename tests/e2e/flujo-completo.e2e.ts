@@ -55,12 +55,11 @@ test('flujo completo: invitar, responder, reportar y exportar', async ({ page, b
 
 	await page.goto(`${base}/invitaciones`);
 	page.on('dialog', (d) => d.accept());
-	await page.getByLabel('Contraseña de acceso vigente').first().fill(ACCESS_PASSWORD);
+	// La contraseña está guardada (cifrada): no hay que escribirla para invitar.
 	await page.getByRole('button', { name: 'Enviar invitaciones' }).click();
 	await expect(page.getByText('Se enviaron 1 de 1 invitaciones.')).toBeVisible();
 
 	// El mensaje de invitación trae el enlace y la contraseña: es lo que recibe la persona.
-	await page.getByLabel('Contraseña de acceso vigente').nth(1).fill(ACCESS_PASSWORD);
 	await page.getByRole('button', { name: 'Generar mensaje' }).click();
 	const mensaje = await page.locator('#generic').inputValue();
 	const enlace = mensaje.match(/https?:\/\/\S+\/a\/[a-z0-9]{12}/)![0];

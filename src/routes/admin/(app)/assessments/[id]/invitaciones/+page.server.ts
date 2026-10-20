@@ -4,6 +4,7 @@ import { db } from '#lib/server/db/index.ts';
 import { mailer } from '#lib/server/email/index.ts';
 import { requireAssessment } from '#lib/server/route-helpers.ts';
 import { listParticipants } from '#lib/server/services/participants.ts';
+import { readAccessPassword } from '#lib/server/services/assessments.ts';
 import {
 	baseVars,
 	checkAccessPassword,
@@ -36,9 +37,17 @@ export const load: PageServerLoad = ({ params }) => {
 			sin_invitar: selectRecipients(list, 'sin_invitar').length,
 			no_completados: selectRecipients(list, 'no_completados').length
 		},
-		mailerKind: mailer.kind
+		mailerKind: mailer.kind,
+		// Si la contraseña está guardada cifrada, no hace falta escribirla para invitar.
+		passwordStored: readAccessPassword(a) !== null
 	};
 };
+
+/** Contraseña para el mensaje: la escrita en el formulario o, si está vacía, la guardada. */
+function passwordFor(a: Parameters<typeof readAccessPassword>[0], form: FormData): string {
+	const typed = String(form.get('password') ?? '');
+	return typed || readAccessPassword(a) || '';
+}
 
 export const actions: Actions = {
 	plantilla: async ({ request, params, locals, getClientAddress }) => {
@@ -59,7 +68,7 @@ export const actions: Actions = {
 	enviar: async ({ request, params, locals, getClientAddress }) => {
 		const a = requireAssessment(params.id);
 		const form = await request.formData();
-		const password = String(form.get('password') ?? '');
+		const password = passwordFor(a, form);
 		const modeRaw = String(form.get('destinatarios') ?? '');
 		const mode: RecipientMode = (RECIPIENT_MODES as readonly string[]).includes(modeRaw)
 			? (modeRaw as RecipientMode)
@@ -86,7 +95,7 @@ export const actions: Actions = {
 
 	copiar: async ({ request, params }) => {
 		const a = requireAssessment(params.id);
-		const password = String((await request.formData()).get('password') ?? '');
+		const password = passwordFor(a, await request.formData());
 		if (!(await checkAccessPassword(a, password))) return fail(400, { copyError: WRONG_PASSWORD });
 		return { generic: genericMessage(a, password, APP_URL) };
 	}

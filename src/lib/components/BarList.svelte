@@ -10,6 +10,8 @@
 		tooltip: string;
 		/** Barra destacada (color de acento); las demás van en gris. */
 		highlight?: boolean;
+		/** Variante de la barra destacada: acento (por defecto) o advertencia (ámbar). */
+		tone?: 'accent' | 'warn';
 		/** Etiqueta junto al texto (ej. "✓ Esperada"), para que el destaque no dependa solo del color. */
 		badge?: string;
 		href?: string;
@@ -28,9 +30,9 @@
 <ul class="space-y-2" aria-label={label}>
 	{#each items as item (item.key)}
 		<li
-			class="group relative grid grid-cols-1 gap-1 rounded-md px-1 py-1 hover:bg-slate-50 sm:grid-cols-[minmax(0,16rem)_1fr] sm:items-center sm:gap-3"
+			class="group relative grid grid-cols-1 gap-1 rounded-lg px-1.5 py-1.5 hover:bg-slate-50 sm:grid-cols-[minmax(0,18rem)_1fr] sm:items-center sm:gap-4"
 		>
-			<span class="text-sm text-slate-800">
+			<span class="text-sm text-ink-950">
 				{#if item.href}
 					<!-- Ancla dentro de la misma página (#pregunta-n). -->
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -40,7 +42,7 @@
 				{/if}
 				{#if item.badge}
 					<span
-						class="ml-1 inline-flex items-center rounded-full bg-indigo-50 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-indigo-800 ring-1 ring-indigo-200 ring-inset"
+						class="ml-1 inline-flex items-center rounded-full bg-brand-50 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-brand-800 ring-1 ring-brand-200 ring-inset"
 						>{item.badge}</span
 					>
 				{/if}
@@ -48,13 +50,15 @@
 			<span class="flex items-center gap-2">
 				<span class="relative h-5 flex-1" aria-hidden="true">
 					<span
-						class="absolute inset-y-0 left-0 rounded-r {item.highlight
-							? 'bg-indigo-600'
-							: 'bg-slate-400'}"
+						class="absolute inset-y-0 left-0 rounded-r {!item.highlight
+							? 'bg-slate-400'
+							: item.tone === 'warn'
+								? 'bg-amber-500'
+								: 'bg-brand-600'}"
 						style="width: {Math.max(item.rate * 100, item.rate > 0 ? 1 : 0)}%"
 					></span>
 				</span>
-				<span class="w-24 shrink-0 text-right text-sm text-slate-700 tabular-nums"
+				<span class="w-24 shrink-0 text-right text-sm font-semibold text-ink-950 tabular-nums"
 					>{item.value}</span
 				>
 			</span>

@@ -92,7 +92,7 @@
 				<p class="text-slate-600">
 					Columnas: <code>nombre</code>, <code>email</code> y opcionalmente <code>area</code>,
 					<code>cargo</code> u otras. Descargue la
-					<a href={templateHref} class="text-indigo-600 underline" download>plantilla</a>. Si un
+					<a href={templateHref} class="text-brand-600 underline" download>plantilla</a>. Si un
 					email ya existe, se actualizan sus datos.
 				</p>
 				<form
@@ -182,7 +182,7 @@
 		{#if hasFilters}
 			<a
 				href={resolve('/admin/(app)/assessments/[id]/participantes', { id: a.id })}
-				class="py-2 text-sm text-indigo-600 hover:underline">Quitar filtros</a
+				class="py-2 text-sm text-brand-600 hover:underline">Quitar filtros</a
 			>
 		{/if}
 	</form>

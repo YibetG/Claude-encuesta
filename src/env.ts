@@ -43,6 +43,11 @@ export const variables = defineEnvVars({
 		description: 'Duración de la sesión del participante (horas, se renueva con el uso).',
 		schema: positiveInt('PARTICIPANT_SESSION_HOURS', 72)
 	},
+	ACCESS_PASSWORD_KEY: {
+		description:
+			'Clave (64 hex) para cifrar las contraseñas de acceso. Si falta, se crea un archivo junto a la base.',
+		schema: optional
+	},
 	ANTHROPIC_API_KEY: {
 		description: 'API key de Anthropic. Si falta, el análisis con IA queda deshabilitado.',
 		schema: optional

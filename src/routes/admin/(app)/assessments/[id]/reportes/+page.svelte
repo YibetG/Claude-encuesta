@@ -26,6 +26,13 @@
 					? `Pregunta ${c.number}: sin respuestas`
 					: `Pregunta ${c.number}: ${c.aligned} de ${c.respondents} con la opción esperada (${formatPercent(c.alignmentRate)})`,
 			highlight: true,
+			// Bajo el promedio: ámbar, para señalar las preguntas a revisar.
+			tone:
+				c.alignmentRate !== null &&
+				s.averageAlignment !== null &&
+				c.alignmentRate < s.averageAlignment
+					? 'warn'
+					: 'accent',
 			href: `#pregunta-${c.number}`
 		}))
 	);
@@ -104,7 +111,7 @@
 			{#if hasFilters}
 				<a
 					href={resolve('/admin/(app)/assessments/[id]/reportes', { id: a.id })}
-					class="py-2 text-sm text-indigo-600 hover:underline">Quitar filtros</a
+					class="py-2 text-sm text-brand-600 hover:underline">Quitar filtros</a
 				>
 			{/if}
 		</form>
@@ -112,22 +119,22 @@
 
 	<!-- Resumen general -->
 	<section aria-labelledby="resumen" class="space-y-4">
-		<h2 id="resumen" class="text-lg font-semibold">Resumen general</h2>
-		<div class="grid gap-4 lg:grid-cols-[auto_1fr]">
-			<div class="{ui.card} flex flex-col justify-center">
-				<p class="text-sm text-slate-500">Alineación promedio</p>
-				<p class="text-5xl font-semibold tracking-tight tabular-nums">
+		<h2 id="resumen" class={ui.sectionTitle}>Resumen general</h2>
+		<div class="grid gap-4 lg:grid-cols-[minmax(0,20rem)_1fr]">
+			<div class="flex flex-col justify-center gap-2 rounded-2xl bg-ink-950 p-6 text-white">
+				<p class="text-sm text-ink-300">Alineación promedio</p>
+				<p class="font-display text-6xl leading-none font-extrabold tabular-nums">
 					{formatPercent(s.averageAlignment)}
 				</p>
-				<p class="mt-1 max-w-xs text-xs text-slate-500">
+				<p class="text-sm leading-relaxed text-ink-300">
 					Promedio, entre las preguntas de selección, del porcentaje que eligió la opción esperada.
 				</p>
 			</div>
-			<dl class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+			<dl class="grid grid-cols-2 gap-4">
 				{#each tiles as t (t.label)}
-					<div class="{ui.card} py-4">
-						<dt class="text-sm text-slate-500">{t.label}</dt>
-						<dd class="mt-1 text-2xl font-semibold tabular-nums">{t.value}</dd>
+					<div class="flex flex-col gap-1 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+						<dt class="text-sm text-slate-600">{t.label}</dt>
+						<dd class="font-display text-3xl font-extrabold tabular-nums">{t.value}</dd>
 					</div>
 				{/each}
 			</dl>
@@ -169,17 +176,27 @@
 	<!-- Alineación por pregunta -->
 	{#if r.choice.length}
 		<section aria-labelledby="alineacion" class={ui.card}>
-			<h2 id="alineacion" class="text-lg font-semibold">Alineación por pregunta</h2>
-			<p class="mt-1 mb-4 text-sm text-slate-500">
+			<h2 id="alineacion" class={ui.sectionTitle}>Alineación por pregunta</h2>
+			<p class="mt-1 mb-5 text-sm text-slate-600">
 				Porcentaje de quienes respondieron que eligió la opción esperada.
 			</p>
 			<BarList items={overview} label="Alineación por pregunta" />
+			<p class="mt-5 flex flex-wrap gap-5 text-xs text-slate-600">
+				<span class="inline-flex items-center gap-2"
+					><span class="h-3 w-3 rounded-sm bg-brand-600" aria-hidden="true"></span>Igual o sobre el
+					promedio</span
+				>
+				<span class="inline-flex items-center gap-2"
+					><span class="h-3 w-3 rounded-sm bg-amber-500" aria-hidden="true"></span>Bajo el promedio
+					(revisar)</span
+				>
+			</p>
 		</section>
 	{/if}
 
 	<!-- Resultados por pregunta -->
 	<section aria-labelledby="por-pregunta" class="space-y-4">
-		<h2 id="por-pregunta" class="text-lg font-semibold">Resultados por pregunta</h2>
+		<h2 id="por-pregunta" class={ui.sectionTitle}>Resultados por pregunta</h2>
 		{#each r.choice as c (c.id)}
 			<article id="pregunta-{c.number}" class="{ui.card} scroll-mt-20">
 				<div class="flex flex-wrap items-start justify-between gap-3">
@@ -206,7 +223,7 @@
 		{/each}
 
 		{#if r.open.length}
-			<article class="{ui.card} border-l-4 border-indigo-400" aria-labelledby="global-titulo">
+			<article class="{ui.card} border-l-4 border-brand-400" aria-labelledby="global-titulo">
 				<h3 id="global-titulo" class="font-medium">Análisis global de las preguntas abiertas</h3>
 				<p class="mt-1 text-xs text-slate-500">
 					Combina todas las preguntas abiertas para encontrar temas transversales.
@@ -235,7 +252,7 @@
 					<span class="text-xs whitespace-nowrap text-slate-500">Respuesta abierta</span>
 				</div>
 				<details class="mt-3">
-					<summary class="cursor-pointer text-sm text-indigo-700">
+					<summary class="cursor-pointer text-sm text-brand-700">
 						Ver {plural(q.responses.length, 'respuesta', 'respuestas')}
 					</summary>
 					{#if q.responses.length === 0}
@@ -275,7 +292,7 @@
 
 	<!-- Por participante -->
 	<section aria-labelledby="por-participante">
-		<h2 id="por-participante" class="text-lg font-semibold">Por participante</h2>
+		<h2 id="por-participante" class={ui.sectionTitle}>Por participante</h2>
 		{#if r.participants.length === 0}
 			<p class="mt-3 text-sm text-slate-500">
 				No hay participantes{hasFilters ? ' para estos filtros' : ''}.

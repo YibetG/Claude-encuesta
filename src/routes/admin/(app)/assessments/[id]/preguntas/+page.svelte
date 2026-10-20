@@ -185,7 +185,7 @@
 		>
 		<div class="mt-4 space-y-4 text-sm">
 			<p class="text-slate-600">
-				Descargue la <a href={templateHref} class="text-indigo-600 underline" download
+				Descargue la <a href={templateHref} class="text-brand-600 underline" download
 					>plantilla de Excel</a
 				>, complétela y súbala. Si alguna fila tiene errores no se importa nada y se indica el
 				detalle.
@@ -220,11 +220,11 @@
 				<fieldset class="flex gap-4">
 					<legend class="sr-only">Modo de importación</legend>
 					<label class="flex items-center gap-1.5">
-						<input type="radio" name="modo" value="agregar" checked class="text-indigo-600" />
+						<input type="radio" name="modo" value="agregar" checked class="text-brand-600" />
 						Agregar al final
 					</label>
 					<label class="flex items-center gap-1.5">
-						<input type="radio" name="modo" value="reemplazar" class="text-indigo-600" />
+						<input type="radio" name="modo" value="reemplazar" class="text-brand-600" />
 						Reemplazar todas
 					</label>
 				</fieldset>
@@ -331,7 +331,7 @@
 						class={ui.input}></textarea>
 
 					<label class="mt-2 inline-flex items-center gap-2 text-sm text-slate-700">
-						<input type="checkbox" bind:checked={q.required} class="rounded text-indigo-600" />
+						<input type="checkbox" bind:checked={q.required} class="rounded text-brand-600" />
 						Obligatoria
 					</label>
 
@@ -374,7 +374,7 @@
 							{#if q.options.length < MAX_OPTIONS}
 								<button
 									type="button"
-									class="mt-2 text-sm text-indigo-600 hover:underline"
+									class="mt-2 text-sm text-brand-600 hover:underline"
 									onclick={() => addOption(q)}
 								>
 									+ Agregar opción

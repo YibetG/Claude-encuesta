@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { blob, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { ACCESS_MODES, ASSESSMENT_STATUSES, QUESTION_TYPES } from '../../constants';
 
 // Esquema completo de la base de datos.
@@ -63,8 +63,17 @@ export const assessments = sqliteTable('assessments', {
 	endsAt: integer('ends_at', { mode: 'timestamp_ms' }).notNull(),
 	timezone: text('timezone').notNull().default('America/Bogota'),
 	accessMode: text('access_mode', { enum: ACCESS_MODES }).notNull().default('invitados'),
-	/** Hash Argon2id de la contraseña compartida. Nunca se guarda en claro. */
+	/** Hash Argon2id de la contraseña compartida: es lo que se usa para validar el ingreso. */
 	accessPasswordHash: text('access_password_hash'),
+	/**
+	 * Copia cifrada (AES-256-GCM) de la contraseña compartida, para que el admin pueda verla.
+	 * La clave de cifrado no está en la base (ver security/secret-box.ts).
+	 */
+	accessPasswordEnc: text('access_password_enc'),
+	/** Logo del cliente que se muestra al participante (PNG, JPEG o WebP; máx. 512 KB). */
+	logoData: blob('logo_data', { mode: 'buffer' }),
+	logoMime: text('logo_mime'),
+	logoUpdatedAt: integer('logo_updated_at', { mode: 'timestamp_ms' }),
 	openMaxChars: integer('open_max_chars').notNull().default(8000),
 	status: text('status', { enum: ASSESSMENT_STATUSES }).notNull().default('borrador'),
 	inviteSubject: text('invite_subject').notNull().default(''),

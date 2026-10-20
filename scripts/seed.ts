@@ -23,6 +23,7 @@ import {
 import { listQuestionsForAdmin, replaceQuestions } from '../src/lib/server/services/questions';
 import { listParticipants, upsertParticipants } from '../src/lib/server/services/participants';
 import { toLocalDateTimeInput } from '../src/lib/datetime';
+import { configureSecretKey } from '../src/lib/server/security/secret-box';
 
 export const SEED_TITLE = 'Assessment de ejemplo: Seguridad de la información';
 export const SEED_PASSWORD = 'demo-acceso-2026';
@@ -191,6 +192,8 @@ async function main() {
 	const url = process.env.DATABASE_URL;
 	if (!url) throw new Error('Falta DATABASE_URL en .env');
 	const db = createDb(url);
+	// La contraseña de acceso se guarda también cifrada: misma clave que usa la app.
+	configureSecretKey({ envKey: process.env.ACCESS_PASSWORD_KEY, dbUrl: url });
 	try {
 		const admin = db.select().from(adminUsers).get();
 		if (!admin) {

@@ -1,2 +1,43 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
+
+/* Tipografías incluidas en la app (la CSP no permite cargar fuentes de terceros). */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/manrope';
+
+/*
+ * Identidad visual:
+ * - ink: azul noche de la barra lateral y los títulos.
+ * - brand: verde azulado del acento (acciones principales, "opción esperada", progreso).
+ * - canvas: fondo general gris muy claro.
+ * Las advertencias usan la escala amber de Tailwind.
+ */
+@theme {
+	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Manrope Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+	--color-brand-50: #e2f3f0;
+	--color-brand-100: #c6e8e2;
+	--color-brand-200: #9ed6cc;
+	--color-brand-300: #6fbfb2;
+	--color-brand-400: #3da394;
+	--color-brand-500: #168c7e;
+	--color-brand-600: #0b7a6e;
+	--color-brand-700: #075e55;
+	--color-brand-800: #064a43;
+	--color-brand-900: #053b36;
+
+	--color-ink-300: #c9d1de;
+	--color-ink-400: #9fb0c8;
+	--color-ink-700: #263650;
+	--color-ink-800: #1f2d45;
+	--color-ink-900: #1c2940;
+	--color-ink-950: #0e1726;
+
+	--color-canvas: #f4f6f9;
+}
+
+body {
+	background: var(--color-canvas);
+	color: var(--color-ink-950);
+}
