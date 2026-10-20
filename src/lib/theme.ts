@@ -1,7 +1,8 @@
 // Colores del cliente por assessment.
 // - primary: reemplaza el azul noche (franja superior e instrucciones del participante).
 // - accent: reemplaza el verde azulado (botones, progreso, opción seleccionada).
-// Sobre ambos va texto blanco, así que deben ser lo bastante oscuros (contraste ≥ 4,5:1).
+// Sobre ambos va texto blanco, así que se recomiendan tonos oscuros (contraste ≥ 4,5:1).
+// Un tono más claro se permite: el admin ve la advertencia y decide.
 // A partir de cada color se derivan los tonos que usan las pantallas (más claros y más oscuros)
 // y se aplican sobrescribiendo las variables de Tailwind (--color-…) en el contenedor.
 

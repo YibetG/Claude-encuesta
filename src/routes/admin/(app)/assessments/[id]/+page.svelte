@@ -8,6 +8,8 @@
 	import {
 		DEFAULT_ACCENT,
 		DEFAULT_PRIMARY,
+		MIN_CONTRAST,
+		contrast,
 		isHexColor,
 		readableWithWhite,
 		themeStyle
@@ -67,8 +69,14 @@
 			accent: isHexColor(accent) ? accent : undefined
 		})
 	);
-	const primaryOk = $derived(isHexColor(primary) && readableWithWhite(primary));
-	const accentOk = $derived(isHexColor(accent) && readableWithWhite(accent));
+	const ratio = (n: number) => n.toLocaleString('es-CO', { maximumFractionDigits: 1 });
+	/** Advertencia (no bloquea) cuando el texto blanco no se leería bien sobre el color. */
+	function lightWarning(hex: string): string | null {
+		if (!isHexColor(hex) || readableWithWhite(hex)) return null;
+		return `Tono claro: el texto blanco encima podría no leerse bien (contraste ${ratio(contrast(hex, '#ffffff'))}:1; se recomienda al menos ${ratio(MIN_CONTRAST)}:1). Revise la vista previa; puede guardarlo igual.`;
+	}
+	const primaryWarning = $derived(lightWarning(primary));
+	const accentWarning = $derived(lightWarning(accent));
 </script>
 
 <svelte:head>
@@ -389,7 +397,7 @@
 					async ({ update }) =>
 						update({ reset: false })}
 			>
-				{#each [{ id: 'primary', label: 'Color principal', hint: 'Franja superior e instrucciones (reemplaza el azul oscuro).', ok: primaryOk }, { id: 'accent', label: 'Color de acento', hint: 'Botones, barra de progreso y opción seleccionada.', ok: accentOk }] as field (field.id)}
+				{#each [{ id: 'primary', label: 'Color principal', hint: 'Franja superior e instrucciones (reemplaza el azul oscuro).', ok: isHexColor(primary), warning: primaryWarning }, { id: 'accent', label: 'Color de acento', hint: 'Botones, barra de progreso y opción seleccionada.', ok: isHexColor(accent), warning: accentWarning }] as field (field.id)}
 					<div>
 						<label for="{field.id}-hex" class={ui.label}>{field.label}</label>
 						<div class="mt-1 flex items-center gap-3">
@@ -428,9 +436,11 @@
 							{/if}
 						</div>
 						<p class={ui.hint}>{field.hint}</p>
-						{#if !field.ok}
-							<p class="mt-1 text-sm text-amber-800">
-								Muy claro: el texto blanco no se leería bien. Elija un tono más oscuro.
+						{#if field.warning}
+							<p
+								class="mt-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+							>
+								⚠ {field.warning}
 							</p>
 						{/if}
 						{#if form?.themeErrors?.[field.id]}
@@ -453,7 +463,13 @@
 						>
 					{/if}
 				</div>
-				{#if form?.themeSaved}<p class={ui.alertSuccess} role="status">Colores guardados.</p>{/if}
+				{#if form?.themeSaved}
+					<p class={ui.alertSuccess} role="status">
+						Colores guardados.{primaryWarning || accentWarning
+							? ' Quedó un tono claro: revise que el texto se lea bien en la vista previa.'
+							: ''}
+					</p>
+				{/if}
 				{#if form?.themeReset}
 					<p class={ui.alertSuccess} role="status">
 						Se restablecieron los colores de la plataforma.

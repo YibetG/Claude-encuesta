@@ -63,13 +63,16 @@ test('logo del cliente y contraseña visible', async ({ page, browser }) => {
 	expect(res.headers()['content-security-policy']).toContain("default-src 'none'");
 	expect(Buffer.from(await res.body()).equals(PNG)).toBe(true);
 
-	// ---- Colores del cliente: un color claro se rechaza, uno oscuro se guarda ----
+	// ---- Colores del cliente: un tono claro advierte pero se puede guardar; uno mal escrito no ----
 	await page.getByLabel('Color principal', { exact: true }).fill('#f5c400');
 	await expect(
-		page.getByText('Muy claro: el texto blanco no se leería bien.').first()
+		page.getByText(/Tono claro: el texto blanco encima podría no leerse bien/)
 	).toBeVisible();
 	await page.getByRole('button', { name: 'Guardar colores' }).click();
-	await expect(page.getByRole('alert')).toContainText('Color principal: es demasiado claro');
+	await expect(page.getByText('Colores guardados. Quedó un tono claro')).toBeVisible();
+	await page.getByLabel('Color principal', { exact: true }).fill('amarillo');
+	await page.getByRole('button', { name: 'Guardar colores' }).click();
+	await expect(page.getByRole('alert')).toContainText('Color principal: use un color en formato');
 	await page.getByLabel('Color principal', { exact: true }).fill('#1a2b5c');
 	await page.getByLabel('Color de acento', { exact: true }).fill('#c2410c');
 	await page.getByRole('button', { name: 'Guardar colores' }).click();

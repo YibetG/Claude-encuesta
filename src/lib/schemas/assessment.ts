@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isValidTimeZone, parseLocalDateTime } from '../datetime';
 import { ACCESS_MODES } from '../constants';
-import { isHexColor, readableWithWhite } from '../theme';
+import { isHexColor } from '../theme';
 
 const text = (max: number, label: string) =>
 	z
@@ -67,16 +67,9 @@ export const accessPasswordSchema = z
 		message: 'Las contraseñas no coinciden.'
 	});
 
+// Los tonos claros se permiten: la pantalla advierte (readableWithWhite) y el admin decide.
 const clientColor = (label: string) =>
-	z
-		.string()
-		.trim()
-		.toLowerCase()
-		.refine(isHexColor, `${label}: use un color en formato #RRGGBB.`)
-		.refine(
-			readableWithWhite,
-			`${label}: es demasiado claro para poner texto blanco encima. Elija un tono más oscuro.`
-		);
+	z.string().trim().toLowerCase().refine(isHexColor, `${label}: use un color en formato #RRGGBB.`);
 
 /** Colores del cliente para las pantallas del participante. */
 export const themeSchema = z.object({

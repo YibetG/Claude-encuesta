@@ -91,7 +91,8 @@ Los secretos van solo en `.env`, que nunca se sube al repositorio.
    El logo aparece al participante y en la portada del PDF (en el PDF solo PNG o JPG).
    **Colores del cliente:** un color principal (franja superior) y uno de acento (botones,
    progreso, selección) reemplazan los de la plataforma en las pantallas del participante y
-   en el PDF. Deben ser oscuros (texto blanco con contraste ≥ 4,5:1); hay vista previa.
+   en el PDF. Se recomiendan tonos oscuros (texto blanco con contraste ≥ 4,5:1); un tono más claro
+   se permite, con advertencia y vista previa.
 4. **Participantes:** manual o con la plantilla de Excel/CSV (nombre, email, área, cargo y
    columnas adicionales).
 5. **Invitaciones:** plantilla editable con variables (`{{nombre}}`, `{{enlace}}`,
