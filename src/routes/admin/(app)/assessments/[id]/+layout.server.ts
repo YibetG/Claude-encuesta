@@ -26,7 +26,9 @@ export const load: LayoutServerLoad = ({ params }) => {
 			hasPassword: !!a.accessPasswordHash,
 			// Solo si se puede descifrar: la contraseña en sí se pide aparte (y queda en auditoría).
 			passwordViewable: !!a.accessPasswordEnc,
-			logoUrl: logoUrl(a)
+			logoUrl: logoUrl(a),
+			themePrimary: a.themePrimary,
+			themeAccent: a.themeAccent
 		},
 		locked: hasResponses(db, a.id),
 		questionCounts: countQuestions(db, a.id),

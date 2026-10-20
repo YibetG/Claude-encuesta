@@ -1,6 +1,7 @@
 import type { Assessment } from '../services/assessments';
 import type { ReportFilters } from '../services/reports';
 import { formatLongDateTime } from '../../format';
+import { isHexColor } from '../../theme';
 
 /** Datos del encabezado comunes al Excel y al PDF. */
 export type ExportMeta = {
@@ -12,6 +13,9 @@ export type ExportMeta = {
 	filtersLabel: string;
 	/** Logo del cliente como data URL (solo PNG/JPEG: los formatos que admite el PDF). */
 	logoDataUrl?: string;
+	/** Colores del cliente (#rrggbb), si el assessment los tiene. */
+	themePrimary?: string;
+	themeAccent?: string;
 };
 
 export function exportMeta(a: Assessment, filters: ReportFilters, now = new Date()): ExportMeta {
@@ -29,7 +33,9 @@ export function exportMeta(a: Assessment, filters: ReportFilters, now = new Date
 		logoDataUrl:
 			a.logoData && (a.logoMime === 'image/png' || a.logoMime === 'image/jpeg')
 				? `data:${a.logoMime};base64,${a.logoData.toString('base64')}`
-				: undefined
+				: undefined,
+		themePrimary: a.themePrimary && isHexColor(a.themePrimary) ? a.themePrimary : undefined,
+		themeAccent: a.themeAccent && isHexColor(a.themeAccent) ? a.themeAccent : undefined
 	};
 }
 

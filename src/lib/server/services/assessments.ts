@@ -131,7 +131,7 @@ export function revealAccessPassword(db: DB, a: Assessment, adminId: string, ip?
 	return password;
 }
 
-export const LOGO_MAX_BYTES = 512 * 1024;
+export const LOGO_MAX_BYTES = 2 * 1024 * 1024; // logos en alta resolución
 const LOGO_TYPES = {
 	'image/png': (b: Buffer) =>
 		b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
@@ -150,11 +150,39 @@ export class LogoError extends Error {}
  */
 export function detectLogoType(data: Buffer): LogoMime {
 	if (data.length === 0) throw new LogoError('Seleccione una imagen.');
-	if (data.length > LOGO_MAX_BYTES) throw new LogoError('El logo no puede superar 512 KB.');
+	if (data.length > LOGO_MAX_BYTES) throw new LogoError('El logo no puede superar 2 MB.');
 	for (const [mime, check] of Object.entries(LOGO_TYPES) as [LogoMime, (b: Buffer) => boolean][]) {
 		if (check(data)) return mime;
 	}
 	throw new LogoError('Formato no soportado. Use una imagen PNG, JPG o WebP.');
+}
+
+/** Guarda los colores del cliente (ya validados con themeSchema) o vuelve a los de la plataforma. */
+export function setTheme(
+	db: DB,
+	id: string,
+	theme: { primary: string; accent: string } | null,
+	adminId: string,
+	ip?: string
+) {
+	db.update(assessments)
+		.set({
+			themePrimary: theme?.primary ?? null,
+			themeAccent: theme?.accent ?? null,
+			updatedAt: new Date()
+		})
+		.where(eq(assessments.id, id))
+		.run();
+	audit(db, {
+		adminId,
+		action: 'assessment.editado',
+		entityType: 'assessment',
+		entityId: id,
+		metadata: theme
+			? { cambio: 'colores del cliente', principal: theme.primary, acento: theme.accent }
+			: { cambio: 'colores de la plataforma' },
+		ip
+	});
 }
 
 export function setLogo(db: DB, id: string, data: Buffer | null, adminId: string, ip?: string) {
@@ -258,6 +286,8 @@ export function duplicateAssessment(db: DB, id: string, adminId: string, ip?: st
 				logoData: original.logoData,
 				logoMime: original.logoMime,
 				logoUpdatedAt: original.logoUpdatedAt,
+				themePrimary: original.themePrimary,
+				themeAccent: original.themeAccent,
 				status: 'borrador',
 				duplicatedFromId: original.id,
 				createdById: adminId

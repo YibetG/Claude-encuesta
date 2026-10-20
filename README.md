@@ -89,6 +89,9 @@ Los secretos van solo en `.env`, que nunca se sube al repositorio.
 3. **Contraseña de acceso, logo del cliente y publicación** (pestaña General). La
    contraseña se puede generar al azar, ver mientras se escribe y volver a mostrar después.
    El logo aparece al participante y en la portada del PDF (en el PDF solo PNG o JPG).
+   **Colores del cliente:** un color principal (franja superior) y uno de acento (botones,
+   progreso, selección) reemplazan los de la plataforma en las pantallas del participante y
+   en el PDF. Deben ser oscuros (texto blanco con contraste ≥ 4,5:1); hay vista previa.
 4. **Participantes:** manual o con la plantilla de Excel/CSV (nombre, email, área, cargo y
    columnas adicionales).
 5. **Invitaciones:** plantilla editable con variables (`{{nombre}}`, `{{enlace}}`,
@@ -163,7 +166,7 @@ node --env-file=.env build      # escucha en el puerto 3000 (variables PORT y HO
   para que el admin pueda verla y no tenga que escribirla al invitar. La clave de cifrado
   está fuera de la base (`ACCESS_PASSWORD_KEY` o el archivo `clave-cifrado.key`), y cada vez
   que alguien muestra una contraseña queda registrado en la auditoría.
-- **Logos:** solo PNG, JPG o WebP de hasta 512 KB, validados por su contenido (no por la
+- **Logos:** solo PNG, JPG o WebP de hasta 2 MB, validados por su contenido (no por la
   extensión). SVG no se acepta porque puede contener código.
 - **Sesiones** en la base (solo se guarda el hash del token), cookies `HttpOnly`, `Secure`,
   `SameSite=Lax`, con vencimiento por inactividad. La de admin tiene además un tope de 7

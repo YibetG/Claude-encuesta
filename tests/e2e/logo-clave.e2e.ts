@@ -37,7 +37,7 @@ test('logo del cliente y contraseña visible', async ({ page, browser }) => {
 	await expect(page.getByLabel('Contraseña vigente')).toHaveCount(0);
 
 	// ---- Logo: SVG rechazado, PNG aceptado ----
-	await page.getByLabel('Imagen (PNG, JPG o WebP · máx. 512 KB)').setInputFiles({
+	await page.getByLabel('Imagen (PNG, JPG o WebP · máx. 2 MB)').setInputFiles({
 		name: 'logo.svg',
 		mimeType: 'image/svg+xml',
 		buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>')
@@ -47,7 +47,7 @@ test('logo del cliente y contraseña visible', async ({ page, browser }) => {
 		'Formato no soportado. Use una imagen PNG, JPG o WebP.'
 	);
 
-	await page.getByLabel('Imagen (PNG, JPG o WebP · máx. 512 KB)').setInputFiles({
+	await page.getByLabel('Imagen (PNG, JPG o WebP · máx. 2 MB)').setInputFiles({
 		name: 'logo.png',
 		mimeType: 'image/png',
 		buffer: PNG
@@ -63,7 +63,19 @@ test('logo del cliente y contraseña visible', async ({ page, browser }) => {
 	expect(res.headers()['content-security-policy']).toContain("default-src 'none'");
 	expect(Buffer.from(await res.body()).equals(PNG)).toBe(true);
 
-	// Publicar (necesita una pregunta) y ver el logo como participante.
+	// ---- Colores del cliente: un color claro se rechaza, uno oscuro se guarda ----
+	await page.getByLabel('Color principal', { exact: true }).fill('#f5c400');
+	await expect(
+		page.getByText('Muy claro: el texto blanco no se leería bien.').first()
+	).toBeVisible();
+	await page.getByRole('button', { name: 'Guardar colores' }).click();
+	await expect(page.getByRole('alert')).toContainText('Color principal: es demasiado claro');
+	await page.getByLabel('Color principal', { exact: true }).fill('#1a2b5c');
+	await page.getByLabel('Color de acento', { exact: true }).fill('#c2410c');
+	await page.getByRole('button', { name: 'Guardar colores' }).click();
+	await expect(page.getByText('Colores guardados.')).toBeVisible();
+
+	// Publicar (necesita una pregunta) y ver el logo y los colores como participante.
 	await page.goto(`${base}/preguntas`);
 	await page.getByRole('button', { name: '+ Pregunta abierta' }).click();
 	await page.getByLabel('Enunciado de la pregunta 1').fill('¿Comentarios?');
@@ -78,6 +90,11 @@ test('logo del cliente y contraseña visible', async ({ page, browser }) => {
 	const p = await ctx.newPage();
 	await p.goto(`/a/${slug}`);
 	await expect(p.getByAltText('Logo')).toHaveAttribute('src', src!);
+	await expect(p.locator('header').first()).toHaveCSS('background-color', 'rgb(26, 43, 92)');
+	await expect(p.getByRole('button', { name: 'Ingresar' })).toHaveCSS(
+		'background-color',
+		'rgb(194, 65, 12)'
+	);
 	await ctx.close();
 
 	// La consulta de la contraseña quedó en la auditoría (sin la contraseña).

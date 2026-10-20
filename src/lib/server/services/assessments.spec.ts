@@ -205,7 +205,9 @@ describe('contraseña de acceso visible y logo', () => {
 			detectLogoType(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>'))
 		).toThrow(LogoError);
 		expect(() => detectLogoType(Buffer.alloc(0))).toThrow('Seleccione una imagen');
-		expect(() => detectLogoType(Buffer.concat([PNG, Buffer.alloc(600 * 1024)]))).toThrow('512 KB');
+		expect(() => detectLogoType(Buffer.concat([PNG, Buffer.alloc(2 * 1024 * 1024 + 1)]))).toThrow(
+			'2 MB'
+		);
 	});
 
 	it('guarda, quita y copia el logo al duplicar', () => {

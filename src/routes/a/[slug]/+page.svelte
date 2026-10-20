@@ -16,7 +16,8 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
-<div class="min-h-screen bg-canvas">
+<!-- style: colores del cliente (variables de Tailwind), calculados en el servidor. -->
+<div class="min-h-screen bg-canvas" style={a.themeStyle}>
 	<!-- Encabezado con el logo del cliente -->
 	<header class="bg-ink-950 px-5 pt-10 pb-20 text-white">
 		<div class="mx-auto flex max-w-lg flex-col gap-4">

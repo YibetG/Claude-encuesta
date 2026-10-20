@@ -3,7 +3,8 @@ import { db } from '#lib/server/db/index.ts';
 import {
 	accessPasswordSchema,
 	assessmentFormSchema,
-	fieldErrors
+	fieldErrors,
+	themeSchema
 } from '#lib/schemas/assessment.ts';
 import {
 	duplicateAssessment,
@@ -14,6 +15,7 @@ import {
 	setAccessPassword,
 	setLogo,
 	setStatus,
+	setTheme,
 	updateAssessment
 } from '#lib/server/services/assessments.ts';
 import { assessmentToForm, readAssessmentForm, timezoneOptions } from '#lib/server/forms.ts';
@@ -78,7 +80,7 @@ export const actions: Actions = {
 			return fail(400, { logoError: 'Seleccione una imagen.' });
 		}
 		if (file.size > LOGO_MAX_BYTES)
-			return fail(400, { logoError: 'El logo no puede superar 512 KB.' });
+			return fail(400, { logoError: 'El logo no puede superar 2 MB.' });
 		try {
 			setLogo(
 				db,
@@ -92,6 +94,27 @@ export const actions: Actions = {
 			throw e;
 		}
 		return { logoSaved: true as const };
+	},
+
+	colores: async ({ request, params, locals, getClientAddress }) => {
+		requireAssessment(params.id);
+		const form = await request.formData();
+		const values = {
+			primary: String(form.get('primary') ?? ''),
+			accent: String(form.get('accent') ?? '')
+		};
+		const parsed = themeSchema.safeParse(values);
+		if (!parsed.success) {
+			return fail(400, { themeValues: values, themeErrors: fieldErrors(parsed.error) });
+		}
+		setTheme(db, params.id, parsed.data, locals.admin!.id, getClientAddress());
+		return { themeSaved: true as const };
+	},
+
+	coloresPlataforma: ({ params, locals, getClientAddress }) => {
+		requireAssessment(params.id);
+		setTheme(db, params.id, null, locals.admin!.id, getClientAddress());
+		return { themeReset: true as const };
 	},
 
 	quitarLogo: ({ params, locals, getClientAddress }) => {

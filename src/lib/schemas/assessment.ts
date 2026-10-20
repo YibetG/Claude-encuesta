@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { isValidTimeZone, parseLocalDateTime } from '../datetime';
 import { ACCESS_MODES } from '../constants';
+import { isHexColor, readableWithWhite } from '../theme';
 
 const text = (max: number, label: string) =>
 	z
@@ -65,6 +66,23 @@ export const accessPasswordSchema = z
 		path: ['confirm'],
 		message: 'Las contraseñas no coinciden.'
 	});
+
+const clientColor = (label: string) =>
+	z
+		.string()
+		.trim()
+		.toLowerCase()
+		.refine(isHexColor, `${label}: use un color en formato #RRGGBB.`)
+		.refine(
+			readableWithWhite,
+			`${label}: es demasiado claro para poner texto blanco encima. Elija un tono más oscuro.`
+		);
+
+/** Colores del cliente para las pantallas del participante. */
+export const themeSchema = z.object({
+	primary: clientColor('Color principal'),
+	accent: clientColor('Color de acento')
+});
 
 /** Convierte los errores de Zod en un mapa campo → primer mensaje. */
 export function fieldErrors(error: z.ZodError): Record<string, string> {

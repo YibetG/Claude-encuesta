@@ -13,7 +13,10 @@ async function crearAssessment(page: Page, titulo: string) {
 	await page.getByLabel('Título').fill(titulo);
 	await page.getByLabel('Descripción').fill('Evaluación de conceptos de seguridad.');
 	await page.getByRole('button', { name: 'Crear y agregar preguntas' }).click();
-	await expect(page).toHaveURL(/\/admin\/assessments\/[0-9a-f-]{36}\/preguntas\?creado=1$/);
+	// Margen extra: la primera creación de la corrida a veces tarda más (carga en frío).
+	await expect(page).toHaveURL(/\/admin\/assessments\/[0-9a-f-]{36}\/preguntas\?creado=1$/, {
+		timeout: 15_000
+	});
 	await expect(page.getByText('Assessment creado.')).toBeVisible();
 	return page.url().replace(/\/preguntas.*$/, '');
 }

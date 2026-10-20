@@ -49,11 +49,11 @@ const BAR_W = 190;
 const BAR_H = 9;
 
 /** Barra horizontal vectorial (extremo redondeado), proporcional a `rate`. */
-function bar(rate: number, highlight: boolean): Content {
+function bar(rate: number, highlight: boolean, accent: string = C.accent): Content {
 	const w = Math.max(rate * BAR_W, rate > 0 ? 1.5 : 0);
 	return {
 		canvas: w
-			? [{ type: 'rect', x: 0, y: 1, w, h: BAR_H, r: 2, color: highlight ? C.accent : C.bar }]
+			? [{ type: 'rect', x: 0, y: 1, w, h: BAR_H, r: 2, color: highlight ? accent : C.bar }]
 			: [{ type: 'line', x1: 0, y1: 1, x2: 0, y2: BAR_H + 1, lineWidth: 0.5, lineColor: C.rule }]
 	};
 }
@@ -91,7 +91,7 @@ function statRow(items: { label: string; value: string }[]): Content {
 	};
 }
 
-function choiceSection(c: ChoiceStat): Content {
+function choiceSection(c: ChoiceStat, accent: string): Content {
 	const pct = (rate: number) => formatPercent(c.respondents ? rate : null);
 	return {
 		unbreakable: true,
@@ -115,11 +115,11 @@ function choiceSection(c: ChoiceStat): Content {
 							text: [
 								o.text,
 								// Roboto no incluye "✓": la etiqueta va solo en texto.
-								o.isExpected ? { text: '  (esperada)', bold: true, color: C.accent } : ''
+								o.isExpected ? { text: '  (esperada)', bold: true, color: accent } : ''
 							],
 							fontSize: 9
 						},
-						bar(o.rate, o.isExpected),
+						bar(o.rate, o.isExpected, accent),
 						{ text: `${o.count} · ${pct(o.rate)}`, fontSize: 9, alignment: 'right' }
 					])
 				},
@@ -191,6 +191,9 @@ export function buildPdfDefinition(
 	analyses: Map<string, StoredAnalysis>
 ): TDocumentDefinitions {
 	const s = report.summary;
+	// Colores del cliente si el assessment los define; si no, los de la plataforma.
+	const accent = meta.themeAccent ?? C.accent;
+	const heading = meta.themePrimary ?? C.ink;
 
 	const cover: Content[] = [
 		meta.logoDataUrl ? { image: meta.logoDataUrl, fit: [160, 70], margin: [0, 110, 0, 0] } : '',
@@ -274,7 +277,7 @@ export function buildPdfDefinition(
 							widths: [210, BAR_W, 60],
 							body: report.choice.map((c) => [
 								{ text: `${c.number}. ${c.prompt}`, fontSize: 9 },
-								bar(c.alignmentRate ?? 0, true),
+								bar(c.alignmentRate ?? 0, true, accent),
 								{ text: formatPercent(c.alignmentRate), fontSize: 9, alignment: 'right' }
 							])
 						},
@@ -287,7 +290,7 @@ export function buildPdfDefinition(
 	const perQuestion: Content[] = report.choice.length
 		? [
 				{ text: 'Resultados por pregunta', style: 'h1', pageBreak: 'before' },
-				...report.choice.map(choiceSection)
+				...report.choice.map((c) => choiceSection(c, accent))
 			]
 		: [];
 
@@ -342,10 +345,10 @@ export function buildPdfDefinition(
 					},
 		content: [...cover, ...summary, ...perQuestion, ...openSection],
 		styles: {
-			kicker: { fontSize: 11, color: C.accent, bold: true },
-			coverTitle: { fontSize: 26, bold: true, lineHeight: 1.1 },
+			kicker: { fontSize: 11, color: accent, bold: true },
+			coverTitle: { fontSize: 26, bold: true, lineHeight: 1.1, color: heading },
 			coverText: { fontSize: 11, color: C.muted },
-			h1: { fontSize: 16, bold: true, margin: [0, 0, 0, 10] },
+			h1: { fontSize: 16, bold: true, margin: [0, 0, 0, 10], color: heading },
 			h2: { fontSize: 12, bold: true, margin: [0, 6, 0, 6] },
 			h3: { fontSize: 10, bold: true, margin: [0, 4, 0, 3] },
 			body: { fontSize: 10 },

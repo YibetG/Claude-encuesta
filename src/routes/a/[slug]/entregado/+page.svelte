@@ -10,8 +10,10 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
+<!-- style: colores del cliente (variables de Tailwind), calculados en el servidor. -->
 <main
 	class="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-7 px-6 py-12 text-center"
+	style={data.themeStyle}
 >
 	{#if data.logoUrl}
 		<span class="rounded-xl ring-1 ring-slate-200"><ClientLogo src={data.logoUrl} /></span>

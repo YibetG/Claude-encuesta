@@ -70,10 +70,13 @@ export const assessments = sqliteTable('assessments', {
 	 * La clave de cifrado no está en la base (ver security/secret-box.ts).
 	 */
 	accessPasswordEnc: text('access_password_enc'),
-	/** Logo del cliente que se muestra al participante (PNG, JPEG o WebP; máx. 512 KB). */
+	/** Logo del cliente que se muestra al participante (PNG, JPEG o WebP; máx. 2 MB). */
 	logoData: blob('logo_data', { mode: 'buffer' }),
 	logoMime: text('logo_mime'),
 	logoUpdatedAt: integer('logo_updated_at', { mode: 'timestamp_ms' }),
+	/** Colores del cliente (#rrggbb) para las pantallas del participante; nulo = los de la plataforma. */
+	themePrimary: text('theme_primary'),
+	themeAccent: text('theme_accent'),
 	openMaxChars: integer('open_max_chars').notNull().default(8000),
 	status: text('status', { enum: ASSESSMENT_STATUSES }).notNull().default('borrador'),
 	inviteSubject: text('invite_subject').notNull().default(''),
