@@ -1,9 +1,12 @@
 import ExcelJS from 'exceljs';
+import { Unzip, UnzipInflate } from 'fflate';
 
 // Lectura de archivos tabulares (Excel .xlsx o CSV) como filas de texto.
 // Se usa para importar preguntas (fase 2) y participantes (fase 3).
 
 export const MAX_IMPORT_BYTES = 2 * 1024 * 1024; // 2 MB
+/** Un .xlsx es un ZIP: tope del contenido descomprimido (protege contra "bombas ZIP"). */
+const MAX_XLSX_UNZIPPED_BYTES = 20 * 1024 * 1024;
 export const MAX_IMPORT_ROWS = 2000;
 export const MAX_IMPORT_COLUMNS = 50;
 
@@ -71,7 +74,47 @@ export function parseCsv(input: string): string[][] {
 	return rows;
 }
 
+/**
+ * Cuenta los bytes reales del ZIP descomprimido, por partes y sin guardarlos, y se detiene
+ * al pasar `max`. No se confía en los tamaños que declara el ZIP: un archivo malicioso
+ * puede mentir. Devuelve `false` si supera el límite.
+ */
+function unzippedSizeWithin(data: Uint8Array, max: number): boolean {
+	let total = 0;
+	let tooBig = false;
+	const unzip = new Unzip((file) => {
+		file.ondata = (err, chunk) => {
+			if (err) throw err;
+			total += chunk.length;
+			if (total > max && !tooBig) {
+				tooBig = true;
+				file.terminate();
+			}
+		};
+		file.start();
+	});
+	unzip.register(UnzipInflate);
+	// Trozos pequeños: cada uno descomprime como mucho ~1000 veces su tamaño.
+	const SLICE = 16 * 1024;
+	for (let i = 0; i < data.length && !tooBig; i += SLICE) {
+		unzip.push(data.subarray(i, i + SLICE), i + SLICE >= data.length);
+	}
+	return !tooBig;
+}
+
 async function readXlsx(buffer: ArrayBuffer): Promise<string[][]> {
+	let withinLimit: boolean;
+	try {
+		withinLimit = unzippedSizeWithin(new Uint8Array(buffer), MAX_XLSX_UNZIPPED_BYTES);
+	} catch {
+		throw new ImportFileError(
+			'No se pudo leer el archivo Excel. Verifique que sea un .xlsx válido.'
+		);
+	}
+	if (!withinLimit) {
+		throw new ImportFileError('El archivo Excel es demasiado grande al descomprimirlo.');
+	}
+
 	const wb = new ExcelJS.Workbook();
 	try {
 		await wb.xlsx.load(buffer);

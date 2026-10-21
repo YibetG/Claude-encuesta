@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import ExcelJS from 'exceljs';
-import { normalizeHeader, parseCsv, readTable } from './table';
+import { zipSync } from 'fflate';
+import { MAX_IMPORT_BYTES, normalizeHeader, parseCsv, readTable } from './table';
 import { buildQuestionTemplate, parseQuestionRows, TEMPLATE_HEADERS } from './questions-import';
 
 const H = TEMPLATE_HEADERS;
@@ -117,6 +118,14 @@ describe('importación de preguntas', () => {
 		ws.getCell('ZZ1').value = 'x'; // columna 702
 		const file = new File([await wb.xlsx.writeBuffer()], 'grande.xlsx');
 		await expect(readTable(file)).rejects.toThrow('demasiadas columnas');
+	});
+
+	it('rechaza un Excel que descomprimido es enorme (bomba ZIP) sin abrirlo con ExcelJS', async () => {
+		// 30 MB de ceros se comprimen a unos pocos KB.
+		const zip = zipSync({ 'xl/sharedStrings.xml': new Uint8Array(30 * 1024 * 1024) });
+		expect(zip.length).toBeLessThan(MAX_IMPORT_BYTES);
+		const file = new File([zip], 'bomba.xlsx');
+		await expect(readTable(file)).rejects.toThrow('demasiado grande al descomprimirlo');
 	});
 
 	it('rechaza formatos no soportados', async () => {
