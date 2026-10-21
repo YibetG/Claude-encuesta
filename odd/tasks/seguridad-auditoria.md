@@ -28,17 +28,23 @@ Entrega: `single-pr`. Pruebas: Vitest (unitarias) y Playwright (E2E).
 
 ## Tasks
 
-- [ ] T1 S1 inline — guard por ruta resuelta + test E2E
-- [ ] T2 S2 inline — límite descomprimido en .xlsx + test unitario
-- [ ] T3 S3,S4 inline — contraseña mínima 12 y clave por (email, IP) + tests
-- [ ] T4 S5,S7 inline — avisos de producción
-- [ ] T5 S6 inline — validación del nombre + test
-- [ ] T6 S8 inline — logo de borrador 404
-- [ ] T7 S9 inline — `.prettierignore`
-- [ ] T8 — verificación independiente (alto riesgo: auth)
+- [x] T1 S1 inline — guard por ruta resuelta + test E2E (ee53953; RED 404 → GREEN 303)
+- [x] T2 S2 inline — límite descomprimido en .xlsx + tests (088ab2b, corregido en c04a4d7)
+- [x] T3 S3,S4 inline — contraseña mínima 12 y clave por (email, IP) + tests (f4bab67)
+- [x] T4 S5,S7 inline — avisos de producción (2bb5185)
+- [x] T5 S6 inline — validación del nombre + test (f4bab67)
+- [x] T6 S8 inline — logo de borrador 404 (1bea1bb; sin test automático, cambio de una línea)
+- [x] T7 S9 inline — `.prettierignore` (1bea1bb)
+- [x] T8 — verificación independiente: S1, S3–S9 cumplidos; S2 tenía un bypass, corregido
 
 ## Log
 
 - L1 (usuario): "puedes levantar este proyecto y revisar que todo este funcionando bien correr los comando y todo y ve si tiene seguridad"
 - L2 (usuario): "has la solucion como una lista de checks y solucionalos"
 - L3 S1 reproducido contra el servidor de desarrollo: la respuesta incluye `demo-acceso-2026`.
+- L4 Verificador: el chequeo por streaming de S2 se esquivaba poniendo en 0 el tamaño del
+  encabezado local (ExcelJS/JSZip usa el directorio central). Corrección: descomprimir con
+  `unzipSync` (directorio central, buffer de tamaño declarado → trunca) y pasar a ExcelJS una
+  copia reempaquetada. Test con el archivo del verificador: RED → GREEN.
+- L5 Cierre: 171 unitarias y 33 E2E pasan; lint y tipos limpios; el ataque de S1 ahora
+  redirige al login.
