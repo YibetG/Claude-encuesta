@@ -3,7 +3,8 @@ import { enterSchema } from './access';
 import { accessPasswordSchema } from './assessment';
 
 describe('contraseña de acceso', () => {
-	const parse = (password: string) => accessPasswordSchema.safeParse({ password, confirm: password });
+	const parse = (password: string) =>
+		accessPasswordSchema.safeParse({ password, confirm: password });
 
 	it('exige al menos 12 caracteres', () => {
 		const r = parse('acceso-2026');
@@ -19,8 +20,7 @@ describe('contraseña de acceso', () => {
 });
 
 describe('ingreso del participante: nombre', () => {
-	const parse = (name: string) =>
-		enterSchema.safeParse({ password: 'x', email: 'ana@x.co', name });
+	const parse = (name: string) => enterSchema.safeParse({ password: 'x', email: 'ana@x.co', name });
 
 	it('acepta un nombre normal', () => {
 		expect(parse('Ana María Pérez-Gómez').success).toBe(true);

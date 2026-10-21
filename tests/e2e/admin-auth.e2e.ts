@@ -55,7 +55,10 @@ test('bloqueo temporal tras 5 intentos fallidos', async ({ page }) => {
 	await expect(page.getByRole('alert')).toContainText('Demasiados intentos fallidos');
 });
 
-test('una ruta de admin codificada (/%61dmin) también exige sesión', async ({ request, baseURL }) => {
+test('una ruta de admin codificada (/%61dmin) también exige sesión', async ({
+	request,
+	baseURL
+}) => {
 	const id = crypto.randomUUID();
 	const action = await request.post(`/%61dmin/assessments/${id}/invitaciones?/copiar`, {
 		form: { password: '' },

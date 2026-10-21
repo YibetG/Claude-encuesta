@@ -184,6 +184,9 @@ node --env-file=.env build      # escucha en el puerto 3000 (variables PORT y HO
 - Para subir logos y archivos de importación (Word hasta 10 MB), defina `BODY_SIZE_LIMIT=11M`.
 - La app corre en **un solo proceso** (SQLite + candados en memoria): no levante varias
   instancias contra la misma base.
+- Al iniciar, la app avisa en la consola (`[configuración]`) si falta `ADDRESS_HEADER` o
+  `ACCESS_PASSWORD_KEY`. En producción defina `ACCESS_PASSWORD_KEY` y guárdela fuera de la
+  carpeta de datos, para que un respaldo de la base no lleve también la clave.
 
 ## Seguridad
 
@@ -201,8 +204,13 @@ node --env-file=.env build      # escucha en el puerto 3000 (variables PORT y HO
 - **Validación con Zod** en el servidor, consultas solo con el ORM, y todo el contenido de
   usuarios se muestra escapado (sin `{@html}`). En Excel se neutralizan las fórmulas.
 - **Rate limiting** con bloqueo de 15 minutos: admin (5 fallos por email, 20 por IP) y acceso
-  de participantes (5 por email, 50 por IP). Los intentos se procesan de a uno por clave,
-  así que las ráfagas simultáneas no esquivan el límite.
+  de participantes (5 por email desde una misma IP, 50 por IP). Los intentos se procesan de a
+  uno por clave, así que las ráfagas simultáneas no esquivan el límite. La contraseña de
+  acceso debe tener al menos 12 caracteres (el botón Generar crea una de 14).
+- **Panel de administración:** el acceso se decide por la ruta que resuelve SvelteKit, así que
+  una URL codificada (`/%61dmin/...`) también exige sesión, incluidas acciones y descargas.
+- **Importación:** los Excel se rechazan si descomprimidos superan 20 MB (bombas ZIP). En
+  modo abierto, el nombre del participante no admite enlaces ni saltos de línea.
 - **Encabezados:** CSP con nonces, `X-Frame-Options: DENY`, `Referrer-Policy`,
   `X-Content-Type-Options`, `Permissions-Policy`, COOP/CORP y HSTS (sobre HTTPS).
 - **Participantes:** en cada petición se verifica la sesión, que no haya entregado y que el
