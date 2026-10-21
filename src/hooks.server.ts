@@ -1,12 +1,25 @@
 import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit/hooks';
 import { sequence } from '@sveltejs/kit/hooks';
-import { ADMIN_SESSION_HOURS } from '$app/env/private';
+import { building, dev } from '$app/env';
+import { ACCESS_PASSWORD_KEY, ADMIN_SESSION_HOURS } from '$app/env/private';
 import { db } from '#lib/server/db/index.ts';
 import { scheduleMaintenance } from '#lib/server/maintenance.ts';
+import { productionWarnings } from '#lib/server/security/startup-checks.ts';
 
-/** Al iniciar el servidor: limpieza de sesiones vencidas e intentos antiguos (y luego cada hora). */
+/**
+ * Al iniciar el servidor: limpieza de sesiones vencidas e intentos antiguos (y luego cada
+ * hora), y en producción, avisos de configuración insegura.
+ */
 export const init: ServerInit = () => {
 	scheduleMaintenance(db);
+	if (!dev && !building) {
+		const warnings = productionWarnings({
+			// ADDRESS_HEADER la lee adapter-node directamente del entorno.
+			addressHeader: process.env.ADDRESS_HEADER,
+			accessPasswordKey: ACCESS_PASSWORD_KEY
+		});
+		for (const w of warnings) console.warn(`[configuración] ${w}`);
+	}
 };
 import { applySecurityHeaders } from '#lib/server/security/headers.ts';
 import {
