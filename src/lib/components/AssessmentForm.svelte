@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	export type AssessmentFormValues = {
 		title: string;
+		clientId: string;
 		description: string;
 		instructions: string;
 		timezone: string;
@@ -20,12 +21,14 @@
 		values,
 		errors = {},
 		timezones,
+		clients,
 		action = '',
 		submitLabel
 	}: {
 		values: AssessmentFormValues;
 		errors?: Record<string, string>;
 		timezones: string[];
+		clients: { id: string; name: string }[];
 		action?: string;
 		submitLabel: string;
 	} = $props();
@@ -58,6 +61,24 @@
 			class={ui.input}
 		/>
 		{#if errors.title}<p id="title-error" class={ui.fieldError}>{errors.title}</p>{/if}
+	</div>
+
+	<div>
+		<label for="clientId" class={ui.label}>Cliente</label>
+		<select
+			id="clientId"
+			name="clientId"
+			value={values.clientId}
+			aria-invalid={!!errors.clientId}
+			class={ui.input}
+		>
+			<option value="">Sin cliente (colores de la plataforma)</option>
+			{#each clients as c (c.id)}
+				<option value={c.id}>{c.name}</option>
+			{/each}
+		</select>
+		<p class={ui.hint}>El assessment usa el logo y los colores del cliente.</p>
+		{#if errors.clientId}<p class={ui.fieldError}>{errors.clientId}</p>{/if}
 	</div>
 
 	<div>

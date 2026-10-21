@@ -10,13 +10,10 @@ import {
 	generateSlug,
 	getAssessment,
 	listAssessments,
-	detectLogoType,
-	LogoError,
 	publishProblems,
 	readAccessPassword,
 	revealAccessPassword,
 	setAccessPassword,
-	setLogo,
 	setStatus
 } from './assessments';
 import { listQuestionsForAdmin, QuestionsLockedError, replaceQuestions } from './questions';
@@ -169,13 +166,7 @@ describe('preguntas', () => {
 	});
 });
 
-// PNG mínimo válido (1×1) para las pruebas de logo.
-const PNG = Buffer.from(
-	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-	'base64'
-);
-
-describe('contraseña de acceso visible y logo', () => {
+describe('contraseña de acceso visible', () => {
 	it('guarda la contraseña cifrada, permite verla y lo registra en auditoría', async () => {
 		const a = createAssessment(db, input, adminId);
 		await setAccessPassword(db, a.id, 'clave-visible-1', adminId);
@@ -198,28 +189,6 @@ describe('contraseña de acceso visible y logo', () => {
 		const a = createAssessment(db, input, adminId);
 		expect(readAccessPassword(a)).toBeNull();
 		expect(revealAccessPassword(db, a, adminId)).toBeNull();
-	});
-
-	it('detecta el tipo del logo por su contenido y rechaza lo demás', () => {
-		expect(detectLogoType(PNG)).toBe('image/png');
-		expect(detectLogoType(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0]))).toBe('image/jpeg');
-		expect(() =>
-			detectLogoType(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>'))
-		).toThrow(LogoError);
-		expect(() => detectLogoType(Buffer.alloc(0))).toThrow('Seleccione una imagen');
-		expect(() => detectLogoType(Buffer.concat([PNG, Buffer.alloc(2 * 1024 * 1024 + 1)]))).toThrow(
-			'2 MB'
-		);
-	});
-
-	it('guarda, quita y copia el logo al duplicar', () => {
-		const a = createAssessment(db, input, adminId);
-		setLogo(db, a.id, PNG, adminId);
-		expect(getAssessment(db, a.id)!.logoMime).toBe('image/png');
-		const copy = duplicateAssessment(db, a.id, adminId)!;
-		expect(copy.logoData?.equals(PNG)).toBe(true);
-		setLogo(db, a.id, null, adminId);
-		expect(getAssessment(db, a.id)!.logoData).toBeNull();
 	});
 
 	it('eliminar borra todo lo asociado, deja la auditoría y no toca otros assessments', () => {

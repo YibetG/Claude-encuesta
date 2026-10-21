@@ -10,14 +10,15 @@
 			href: resolve('/admin/(app)'),
 			label: 'Assessments',
 			icon: 'grid',
-			exclude: resolve('/admin/(app)/auditoria')
+			exclude: [resolve('/admin/(app)/auditoria'), resolve('/admin/(app)/clientes')]
 		},
-		{ href: resolve('/admin/(app)/auditoria'), label: 'Auditoría', icon: 'clock', exclude: '' }
+		{ href: resolve('/admin/(app)/clientes'), label: 'Clientes', icon: 'users', exclude: [] },
+		{ href: resolve('/admin/(app)/auditoria'), label: 'Auditoría', icon: 'clock', exclude: [] }
 	];
 
-	function isActive(href: string, exclude: string) {
+	function isActive(href: string, exclude: string[]) {
 		const p = page.url.pathname;
-		if (exclude && p.startsWith(exclude)) return false;
+		if (exclude.some((e) => p.startsWith(e))) return false;
 		return p === href || p.startsWith(href + '/');
 	}
 
@@ -88,6 +89,21 @@
 								height="7"
 								rx="1.5"
 							></rect></svg
+						>
+					{:else if link.icon === 'users'}
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							><path d="M3 21V7l9-4 9 4v14"></path><path d="M9 21v-6h6v6"></path><path
+								d="M8 10h.01M12 10h.01M16 10h.01"
+							></path></svg
 						>
 					{:else}
 						<svg

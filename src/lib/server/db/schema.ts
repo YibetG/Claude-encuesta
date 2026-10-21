@@ -52,8 +52,31 @@ export const adminSessions = sqliteTable(
 
 export { ACCESS_MODES, ASSESSMENT_STATUSES, QUESTION_TYPES };
 
+// ---------------------------------------------------------------
+// Clientes: la línea gráfica (logo y colores) que comparten sus assessments
+// ---------------------------------------------------------------
+
+export const clients = sqliteTable('clients', {
+	id: id(),
+	name: text('name').notNull(),
+	/** Logo que ve el participante y que va en el PDF (PNG, JPEG o WebP; máx. 2 MB). */
+	logoData: blob('logo_data', { mode: 'buffer' }),
+	logoMime: text('logo_mime'),
+	logoUpdatedAt: integer('logo_updated_at', { mode: 'timestamp_ms' }),
+	/** Colores (#rrggbb) de las pantallas del participante y del PDF; nulo = los de la plataforma. */
+	themePrimary: text('theme_primary'),
+	themeAccent: text('theme_accent'),
+	createdById: text('created_by_id').references(() => adminUsers.id, { onDelete: 'set null' }),
+	createdAt: createdAt(),
+	updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+		.notNull()
+		.default(sql`(unixepoch('subsec') * 1000)`)
+});
+
 export const assessments = sqliteTable('assessments', {
 	id: id(),
+	/** Cliente dueño de la línea gráfica. Un cliente con assessments no se puede eliminar. */
+	clientId: text('client_id').references(() => clients.id, { onDelete: 'restrict' }),
 	/** Identificador aleatorio del link público /a/[slug]. */
 	slug: text('slug').notNull().unique(),
 	title: text('title').notNull(),
@@ -70,13 +93,6 @@ export const assessments = sqliteTable('assessments', {
 	 * La clave de cifrado no está en la base (ver security/secret-box.ts).
 	 */
 	accessPasswordEnc: text('access_password_enc'),
-	/** Logo del cliente que se muestra al participante (PNG, JPEG o WebP; máx. 2 MB). */
-	logoData: blob('logo_data', { mode: 'buffer' }),
-	logoMime: text('logo_mime'),
-	logoUpdatedAt: integer('logo_updated_at', { mode: 'timestamp_ms' }),
-	/** Colores del cliente (#rrggbb) para las pantallas del participante; nulo = los de la plataforma. */
-	themePrimary: text('theme_primary'),
-	themeAccent: text('theme_accent'),
 	openMaxChars: integer('open_max_chars').notNull().default(8000),
 	status: text('status', { enum: ASSESSMENT_STATUSES }).notNull().default('borrador'),
 	inviteSubject: text('invite_subject').notNull().default(''),

@@ -16,6 +16,12 @@ const text = (max: number, label: string) =>
 export const assessmentFormSchema = z
 	.object({
 		title: text(200, 'Título').min(3, 'El título debe tener al menos 3 caracteres.'),
+		// Vacío = sin cliente (colores de la plataforma). Que exista se verifica en el servidor.
+		clientId: z
+			.string()
+			.trim()
+			.default('')
+			.transform((v) => v || null),
 		description: text(5000, 'Descripción').default(''),
 		instructions: text(10000, 'Instrucciones').default(''),
 		timezone: z.string().trim().refine(isValidTimeZone, 'Zona horaria no válida.'),
@@ -70,6 +76,13 @@ export const accessPasswordSchema = z
 // Los tonos claros se permiten: la pantalla advierte (readableWithWhite) y el admin decide.
 const clientColor = (label: string) =>
 	z.string().trim().toLowerCase().refine(isHexColor, `${label}: use un color en formato #RRGGBB.`);
+
+/** Datos básicos de un cliente. */
+export const clientSchema = z.object({
+	name: text(120, 'Nombre')
+		.min(2, 'El nombre debe tener al menos 2 caracteres.')
+		.refine((v) => !/[\r\n]/.test(v), 'El nombre no puede tener saltos de línea.')
+});
 
 /** Colores del cliente para las pantallas del participante. */
 export const themeSchema = z.object({

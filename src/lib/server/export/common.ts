@@ -1,4 +1,6 @@
+import type { Executor } from '../db/client';
 import type { Assessment } from '../services/assessments';
+import { getBrand, readClientLogo } from '../services/clients';
 import type { ReportFilters } from '../services/reports';
 import { formatLongDateTime } from '../../format';
 import { isHexColor } from '../../theme';
@@ -18,7 +20,15 @@ export type ExportMeta = {
 	themeAccent?: string;
 };
 
-export function exportMeta(a: Assessment, filters: ReportFilters, now = new Date()): ExportMeta {
+export function exportMeta(
+	db: Executor,
+	a: Assessment,
+	filters: ReportFilters,
+	now = new Date()
+): ExportMeta {
+	// Logo y colores del cliente del assessment.
+	const brand = getBrand(db, a.clientId);
+	const logo = readClientLogo(db, a.clientId);
 	const parts = [
 		filters.area ? `Área: ${filters.area}` : null,
 		filters.cargo ? `Cargo: ${filters.cargo}` : null
@@ -31,11 +41,12 @@ export function exportMeta(a: Assessment, filters: ReportFilters, now = new Date
 		generatedAt: formatLongDateTime(now, a.timezone),
 		filtersLabel: parts.length ? parts.join(' · ') : 'Todos los participantes',
 		logoDataUrl:
-			a.logoData && (a.logoMime === 'image/png' || a.logoMime === 'image/jpeg')
-				? `data:${a.logoMime};base64,${a.logoData.toString('base64')}`
+			logo && (logo.mime === 'image/png' || logo.mime === 'image/jpeg')
+				? `data:${logo.mime};base64,${logo.data.toString('base64')}`
 				: undefined,
-		themePrimary: a.themePrimary && isHexColor(a.themePrimary) ? a.themePrimary : undefined,
-		themeAccent: a.themeAccent && isHexColor(a.themeAccent) ? a.themeAccent : undefined
+		themePrimary:
+			brand?.themePrimary && isHexColor(brand.themePrimary) ? brand.themePrimary : undefined,
+		themeAccent: brand?.themeAccent && isHexColor(brand.themeAccent) ? brand.themeAccent : undefined
 	};
 }
 

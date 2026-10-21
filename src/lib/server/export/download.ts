@@ -18,7 +18,7 @@ export async function reportDownload(event: RequestEvent<{ id: string }>, format
 	const a = requireAssessment(event.params.id);
 	const { filters } = reportFiltersFromUrl(a.id, event.url);
 	const report = buildReport(db, a.id, filters);
-	const meta = exportMeta(a, filters);
+	const meta = exportMeta(db, a, filters);
 
 	const body =
 		format === 'xlsx'

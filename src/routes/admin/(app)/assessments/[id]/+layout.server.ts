@@ -5,11 +5,13 @@ import { participants } from '#lib/server/db/schema.ts';
 import { countQuestions, hasResponses } from '#lib/server/services/assessments.ts';
 import { publicLink } from '#lib/server/services/invitations.ts';
 import { logoUrl } from '#lib/server/logo.ts';
+import { getBrand } from '#lib/server/services/clients.ts';
 import { requireAssessment } from '#lib/server/route-helpers.ts';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = ({ params }) => {
 	const a = requireAssessment(params.id);
+	const brand = getBrand(db, a.clientId);
 
 	return {
 		// Campos explícitos: el hash de la contraseña de acceso nunca sale del servidor.
@@ -26,9 +28,16 @@ export const load: LayoutServerLoad = ({ params }) => {
 			hasPassword: !!a.accessPasswordHash,
 			// Solo si se puede descifrar: la contraseña en sí se pide aparte (y queda en auditoría).
 			passwordViewable: !!a.accessPasswordEnc,
-			logoUrl: logoUrl(a),
-			themePrimary: a.themePrimary,
-			themeAccent: a.themeAccent
+			// Marca heredada del cliente.
+			client: brand
+				? {
+						id: brand.id,
+						name: brand.name,
+						themePrimary: brand.themePrimary,
+						themeAccent: brand.themeAccent
+					}
+				: null,
+			logoUrl: logoUrl(a.slug, brand)
 		},
 		locked: hasResponses(db, a.id),
 		questionCounts: countQuestions(db, a.id),

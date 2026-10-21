@@ -22,6 +22,20 @@
       "when": 1792523423903,
       "tag": "0002_colores_cliente",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792537085236,
+      "tag": "0003_clientes",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792537103592,
+      "tag": "0004_marca_desde_cliente",
+      "breakpoints": true
     }
   ]
 }

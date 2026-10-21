@@ -10,8 +10,7 @@ import {
 	submitAnswers
 } from '#lib/server/services/answers.ts';
 import { deleteParticipantCookie } from '#lib/server/auth/participant-session.ts';
-import { logoUrl } from '#lib/server/logo.ts';
-import { themeStyle } from '#lib/theme.ts';
+import { participantBrand } from '#lib/server/logo.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ params, cookies }) => {
@@ -24,8 +23,7 @@ export const load: PageServerLoad = ({ params, cookies }) => {
 			openMaxChars: a.openMaxChars,
 			endsAt: a.endsAt,
 			timezone: a.timezone,
-			logoUrl: logoUrl(a),
-			themeStyle: themeStyle({ primary: a.themePrimary, accent: a.themeAccent }) ?? null
+			...participantBrand(db, a)
 		},
 		participant: { name: ctx.participant.name, email: ctx.participant.email },
 		// Sin la opción correcta (ver listQuestionsForParticipant).

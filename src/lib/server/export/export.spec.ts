@@ -110,7 +110,7 @@ beforeAll(() => {
 });
 
 const meta = () =>
-	exportMeta(getAssessment(db, assessmentId)!, {}, new Date('2026-11-06T12:00:00Z'));
+	exportMeta(db, getAssessment(db, assessmentId)!, {}, new Date('2026-11-06T12:00:00Z'));
 
 describe('exportación a Excel', () => {
 	it('genera las cuatro hojas con los datos del reporte', async () => {

@@ -21,6 +21,7 @@
 		values={form?.values ?? data.values}
 		errors={form?.errors}
 		timezones={data.timezones}
+		clients={data.clients}
 		submitLabel="Crear y agregar preguntas"
 	/>
 </div>

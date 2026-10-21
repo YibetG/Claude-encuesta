@@ -102,6 +102,21 @@
 				class="w-full border-0 bg-transparent py-2.5 text-sm focus:ring-0"
 			/>
 		</div>
+		{#if data.clients.length}
+			<label for="cliente" class="sr-only">Filtrar por cliente</label>
+			<select
+				id="cliente"
+				name="cliente"
+				value={data.clientId}
+				onchange={(e) => e.currentTarget.form?.requestSubmit()}
+				class="rounded-lg border-slate-300 py-2.5 text-sm"
+			>
+				<option value="">Todos los clientes</option>
+				{#each data.clients as c (c.id)}
+					<option value={c.id}>{c.name}</option>
+				{/each}
+			</select>
+		{/if}
 		{#if data.includeArchived}
 			<a href={resolve('/admin/(app)')} class={ui.btnSecondary}>Ocultar archivados</a>
 		{:else}
@@ -140,11 +155,14 @@
 									class="h-10 w-10 shrink-0 rounded-lg border border-slate-200 bg-white object-contain p-1"
 								/>
 							{/if}
-							<h2 class="font-display text-lg leading-snug font-bold">
-								<a href={generalHref} class="text-ink-950 hover:text-brand-700 hover:underline"
-									>{a.title}</a
-								>
-							</h2>
+							<div class="min-w-0">
+								<h2 class="font-display text-lg leading-snug font-bold">
+									<a href={generalHref} class="text-ink-950 hover:text-brand-700 hover:underline"
+										>{a.title}</a
+									>
+								</h2>
+								{#if a.clientName}<p class="text-sm text-slate-600">{a.clientName}</p>{/if}
+							</div>
 						</div>
 						<StatusBadge status={a.status} />
 					</div>

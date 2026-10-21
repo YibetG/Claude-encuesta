@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
-import { asc, desc, eq, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
 import type { DB, Executor } from '../db/client';
-import { assessments, questionOptions, questions, submissions } from '../db/schema';
+import { assessments, clients, questionOptions, questions, submissions } from '../db/schema';
 import { hashPassword } from '../auth/password';
 import { decryptSecret, encryptSecret } from '../security/secret-box';
 import { audit } from '../security/audit';
@@ -23,11 +23,16 @@ export function getAssessment(db: DB, id: string): Assessment | undefined {
 	return db.select().from(assessments).where(eq(assessments.id, id)).get();
 }
 
-/** Lista para el panel, con conteos de preguntas, participantes y entregas. */
-export function listAssessments(db: DB, { includeArchived = false } = {}) {
+/** Lista para el panel, con conteos de preguntas, participantes y entregas, y su cliente. */
+export function listAssessments(
+	db: DB,
+	{ includeArchived = false, clientId }: { includeArchived?: boolean; clientId?: string } = {}
+) {
 	return db
 		.select({
 			id: assessments.id,
+			clientId: assessments.clientId,
+			clientName: clients.name,
 			title: assessments.title,
 			status: assessments.status,
 			startsAt: assessments.startsAt,
@@ -42,11 +47,17 @@ export function listAssessments(db: DB, { includeArchived = false } = {}) {
 			notInvitedCount: sql<number>`(select count(*) from "participants" p where p."assessment_id" = "assessments"."id" and p."invited_at" is null)`,
 			hasPassword: sql<boolean>`"assessments"."access_password_hash" is not null`.mapWith(Boolean),
 			slug: assessments.slug,
-			logoMime: assessments.logoMime,
-			logoUpdatedAt: assessments.logoUpdatedAt
+			logoMime: clients.logoMime,
+			logoUpdatedAt: clients.logoUpdatedAt
 		})
 		.from(assessments)
-		.where(includeArchived ? undefined : ne(assessments.status, 'archivado'))
+		.leftJoin(clients, eq(clients.id, assessments.clientId))
+		.where(
+			and(
+				includeArchived ? undefined : ne(assessments.status, 'archivado'),
+				clientId ? eq(assessments.clientId, clientId) : undefined
+			)
+		)
 		.orderBy(desc(assessments.createdAt))
 		.all();
 }
@@ -129,81 +140,6 @@ export function revealAccessPassword(db: DB, a: Assessment, adminId: string, ip?
 		});
 	}
 	return password;
-}
-
-export const LOGO_MAX_BYTES = 2 * 1024 * 1024; // logos en alta resolución
-const LOGO_TYPES = {
-	'image/png': (b: Buffer) =>
-		b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
-	'image/jpeg': (b: Buffer) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
-	'image/webp': (b: Buffer) =>
-		b.subarray(0, 4).toString('latin1') === 'RIFF' &&
-		b.subarray(8, 12).toString('latin1') === 'WEBP'
-} as const;
-export type LogoMime = keyof typeof LOGO_TYPES;
-
-export class LogoError extends Error {}
-
-/**
- * Valida el logo por su contenido (no por la extensión ni el tipo que declara el navegador).
- * SVG no se acepta: puede contener scripts.
- */
-export function detectLogoType(data: Buffer): LogoMime {
-	if (data.length === 0) throw new LogoError('Seleccione una imagen.');
-	if (data.length > LOGO_MAX_BYTES) throw new LogoError('El logo no puede superar 2 MB.');
-	for (const [mime, check] of Object.entries(LOGO_TYPES) as [LogoMime, (b: Buffer) => boolean][]) {
-		if (check(data)) return mime;
-	}
-	throw new LogoError('Formato no soportado. Use una imagen PNG, JPG o WebP.');
-}
-
-/** Guarda los colores del cliente (ya validados con themeSchema) o vuelve a los de la plataforma. */
-export function setTheme(
-	db: DB,
-	id: string,
-	theme: { primary: string; accent: string } | null,
-	adminId: string,
-	ip?: string
-) {
-	db.update(assessments)
-		.set({
-			themePrimary: theme?.primary ?? null,
-			themeAccent: theme?.accent ?? null,
-			updatedAt: new Date()
-		})
-		.where(eq(assessments.id, id))
-		.run();
-	audit(db, {
-		adminId,
-		action: 'assessment.editado',
-		entityType: 'assessment',
-		entityId: id,
-		metadata: theme
-			? { cambio: 'colores del cliente', principal: theme.primary, acento: theme.accent }
-			: { cambio: 'colores de la plataforma' },
-		ip
-	});
-}
-
-export function setLogo(db: DB, id: string, data: Buffer | null, adminId: string, ip?: string) {
-	const mime = data ? detectLogoType(data) : null;
-	db.update(assessments)
-		.set({
-			logoData: data,
-			logoMime: mime,
-			logoUpdatedAt: data ? new Date() : null,
-			updatedAt: new Date()
-		})
-		.where(eq(assessments.id, id))
-		.run();
-	audit(db, {
-		adminId,
-		action: 'assessment.editado',
-		entityType: 'assessment',
-		entityId: id,
-		metadata: { cambio: data ? 'logo actualizado' : 'logo eliminado' },
-		ip
-	});
 }
 
 /** ¿Algún participante ya empezó o entregó? Desde ese momento las preguntas quedan bloqueadas. */
@@ -319,12 +255,8 @@ export function duplicateAssessment(db: DB, id: string, adminId: string, ip?: st
 				openMaxChars: original.openMaxChars,
 				inviteSubject: original.inviteSubject,
 				inviteBody: original.inviteBody,
-				// El logo del cliente se conserva en la copia (la contraseña no).
-				logoData: original.logoData,
-				logoMime: original.logoMime,
-				logoUpdatedAt: original.logoUpdatedAt,
-				themePrimary: original.themePrimary,
-				themeAccent: original.themeAccent,
+				// La copia es del mismo cliente, así que conserva su marca (la contraseña no se copia).
+				clientId: original.clientId,
 				status: 'borrador',
 				duplicatedFromId: original.id,
 				createdById: adminId

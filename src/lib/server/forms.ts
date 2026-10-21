@@ -11,6 +11,7 @@ export function readAssessmentForm(form: FormData): AssessmentFormValues {
 	};
 	return {
 		title: s('title'),
+		clientId: s('clientId'),
 		description: s('description'),
 		instructions: s('instructions'),
 		timezone: s('timezone'),
@@ -24,6 +25,7 @@ export function readAssessmentForm(form: FormData): AssessmentFormValues {
 export function assessmentToForm(a: Assessment): AssessmentFormValues {
 	return {
 		title: a.title,
+		clientId: a.clientId ?? '',
 		description: a.description,
 		instructions: a.instructions,
 		timezone: a.timezone,
