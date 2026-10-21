@@ -72,6 +72,18 @@ export function limitKeys(
 	];
 }
 
+/**
+ * Claves para el ingreso de participantes. La contraseña es compartida, así que el límite
+ * por email no protege un secreto propio: se cuenta por (email, IP) para que nadie pueda
+ * bloquear a otra persona solo con conocer su email.
+ */
+export function participantLimitKeys(scope: string, ip: string, email: string): LimitKey[] {
+	return [
+		{ key: `${scope}:ip:${ip}`, policy: PARTICIPANT_IP_POLICY },
+		{ key: `${scope}:email:${email.trim().toLowerCase()}:ip:${ip}`, policy: EMAIL_POLICY }
+	];
+}
+
 /** Devuelve hasta cuándo está bloqueada la clave más restringida, o `null` si ninguna lo está. */
 export function lockedUntil(db: DB, keys: LimitKey[], now = new Date()): Date | null {
 	if (keys.length === 0) return null;

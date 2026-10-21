@@ -5,9 +5,8 @@ import { verifyPassword } from '../auth/password';
 import { validateParticipantSession } from '../auth/participant-session';
 import {
 	clearFailures,
-	limitKeys,
 	lockedUntil,
-	PARTICIPANT_IP_POLICY,
+	participantLimitKeys,
 	recordFailure,
 	withKeyLock,
 	type LimitKey
@@ -41,7 +40,7 @@ export type EnterResult =
 
 /**
  * Valida el ingreso de un participante (contraseña compartida + email).
- * - Rate limiting por IP y por email (por assessment).
+ * - Rate limiting por IP y por (email, IP), por assessment.
  * - Modo "invitados": el email debe estar cargado. Modo "abierto": se registra si es nuevo.
  * - Una sola entrega por email: si ya entregó, no puede volver a entrar.
  * - Crea la entrega (en progreso) la primera vez, lo que bloquea la edición de preguntas.
@@ -61,7 +60,7 @@ export async function enterAssessment(
 	const avail = availability(a, now);
 	if (avail !== 'abierto') return { ok: false, reason: avail };
 
-	const keys = limitKeys(`acceso:${a.id}`, input.ip, input.email, PARTICIPANT_IP_POLICY);
+	const keys = participantLimitKeys(`acceso:${a.id}`, input.ip, input.email);
 	// Los intentos con la misma IP o el mismo email se procesan de a uno (ver withKeyLock).
 	return withKeyLock(
 		keys.map((k) => k.key),

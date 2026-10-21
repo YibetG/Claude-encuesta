@@ -293,7 +293,7 @@
 						name="password"
 						type={verNueva ? 'text' : 'password'}
 						autocomplete="new-password"
-						minlength="8"
+						minlength="12"
 						required
 						bind:value={nueva}
 						class="{ui.input} pr-11"

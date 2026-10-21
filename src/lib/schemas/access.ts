@@ -12,6 +12,9 @@ export const enterSchema = z.object({
 		.string()
 		.trim()
 		.max(150, 'El nombre no puede superar 150 caracteres.')
+		// El nombre se incluye en los correos: sin enlaces ni saltos de línea.
+		.refine((v) => !/[\r\n]/.test(v), 'El nombre no puede tener saltos de línea.')
+		.refine((v) => !/https?:\/\/|www\./i.test(v), 'El nombre no puede contener enlaces.')
 		.transform((v) => (v === '' ? null : v))
 		.refine((v) => v === null || v.length >= 2, 'El nombre debe tener al menos 2 caracteres.')
 		.nullable()

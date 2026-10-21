@@ -156,6 +156,14 @@ describe('ingreso del participante', { timeout: 30_000 }, () => {
 		expect(await enter('ana@x.co')).toMatchObject({ reason: 'locked' });
 	});
 
+	it('los fallos desde otra IP no bloquean el email de la persona', async () => {
+		for (let i = 0; i < 5; i++) await enter('ana@x.co', 'mala', { ip: '203.0.113.9' });
+		expect(await enter('ana@x.co', 'mala', { ip: '203.0.113.9' })).toMatchObject({
+			reason: 'locked'
+		});
+		expect((await enter('ana@x.co')).ok).toBe(true);
+	});
+
 	it('al cambiar la contraseña, las sesiones activas siguen y los nuevos ingresos usan la nueva', async () => {
 		const ctx = await login();
 		await setAccessPassword(db, assessmentId, 'nueva-clave-1', adminId);

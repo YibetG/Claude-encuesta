@@ -64,7 +64,7 @@ export const accessPasswordSchema = z
 	.object({
 		password: z
 			.string()
-			.min(8, 'La contraseña de acceso debe tener al menos 8 caracteres.')
+			.min(12, 'La contraseña de acceso debe tener al menos 12 caracteres.')
 			.max(100, 'La contraseña de acceso es demasiado larga.'),
 		confirm: z.string()
 	})

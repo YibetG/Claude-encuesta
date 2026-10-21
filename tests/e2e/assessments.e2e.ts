@@ -97,13 +97,13 @@ test('contraseña de acceso y publicación', async ({ page }) => {
 	await page.getByRole('button', { name: 'Publicar' }).click();
 	await expect(page.getByRole('alert')).toContainText('Defina la contraseña de acceso.');
 
-	await page.getByLabel('Contraseña', { exact: true }).fill('acceso-2026');
+	await page.getByLabel('Contraseña', { exact: true }).fill('acceso-2026-ok');
 	await page.getByLabel('Repetir contraseña').fill('otra-cosa');
 	await page.getByRole('button', { name: 'Guardar', exact: true }).click();
 	await expect(page.getByText('Las contraseñas no coinciden.')).toBeVisible();
 
-	await page.getByLabel('Contraseña', { exact: true }).fill('acceso-2026');
-	await page.getByLabel('Repetir contraseña').fill('acceso-2026');
+	await page.getByLabel('Contraseña', { exact: true }).fill('acceso-2026-ok');
+	await page.getByLabel('Repetir contraseña').fill('acceso-2026-ok');
 	await page.getByRole('button', { name: 'Guardar', exact: true }).click();
 	await expect(page.getByText('Contraseña de acceso actualizada.')).toBeVisible();
 
