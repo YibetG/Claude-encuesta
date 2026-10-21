@@ -41,17 +41,32 @@ const adminSession: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
+/** Ruta sin codificación URL, o `null` si es inválida (SvelteKit tampoco la enruta). */
+function decodedPath(pathname: string): string | null {
+	try {
+		return decodeURI(pathname);
+	} catch {
+		return null;
+	}
+}
+
 /**
  * Protege todo /admin salvo /admin/login. Se hace aquí (y no solo en el layout)
- * para cubrir también endpoints +server.ts como las descargas.
+ * para cubrir también endpoints +server.ts y acciones de formularios.
+ * Se decide por la ruta que SvelteKit resolvió (`event.route.id`) y por la ruta
+ * decodificada: `event.url.pathname` llega sin decodificar, y `/%61dmin/...`
+ * también ejecuta las rutas de /admin.
  */
 const adminGuard: Handle = async ({ event, resolve }) => {
-	const path = event.url.pathname;
-	const isAdminArea = path === '/admin' || path.startsWith('/admin/');
+	const routeId = event.route.id;
+	const path = decodedPath(event.url.pathname);
+	const isAdminArea =
+		routeId?.startsWith('/admin') || path === '/admin' || !!path?.startsWith('/admin/');
 	if (!isAdminArea) return resolve(event);
 
-	if (!event.locals.admin && path !== '/admin/login') {
-		const destino = path + event.url.search;
+	const isLogin = routeId === '/admin/login' || (routeId === null && path === '/admin/login');
+	if (!event.locals.admin && !isLogin) {
+		const destino = (path ?? '/admin') + event.url.search;
 		// Respuesta explícita (no `redirect()` lanzado) para que también reciba los
 		// encabezados de seguridad de `securityHeaders`.
 		return new Response(null, {

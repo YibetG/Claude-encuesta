@@ -55,6 +55,21 @@ test('bloqueo temporal tras 5 intentos fallidos', async ({ page }) => {
 	await expect(page.getByRole('alert')).toContainText('Demasiados intentos fallidos');
 });
 
+test('una ruta de admin codificada (/%61dmin) también exige sesión', async ({ request, baseURL }) => {
+	const id = crypto.randomUUID();
+	const action = await request.post(`/%61dmin/assessments/${id}/invitaciones?/copiar`, {
+		form: { password: '' },
+		headers: { origin: baseURL!, 'x-sveltekit-action': 'true' },
+		maxRedirects: 0
+	});
+	expect(action.status()).toBe(303);
+	expect(action.headers()['location']).toMatch(/^\/admin\/login\?destino=/);
+
+	const endpoint = await request.get(`/%61dmin/clientes/${id}/logo`, { maxRedirects: 0 });
+	expect(endpoint.status()).toBe(303);
+	expect(endpoint.headers()['location']).toMatch(/^\/admin\/login\?destino=/);
+});
+
 test('el formulario rechaza envíos desde otro origen (CSRF)', async ({ request }) => {
 	const res = await request.post('/admin/login', {
 		form: { email: E2E_ADMIN.email, password: E2E_ADMIN.password },
