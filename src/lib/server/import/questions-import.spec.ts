@@ -128,6 +128,15 @@ describe('importación de preguntas', () => {
 		await expect(readTable(file)).rejects.toThrow('demasiado grande al descomprimirlo');
 	});
 
+	it('rechaza la bomba ZIP aunque el encabezado local mienta sobre el tamaño', async () => {
+		const zip = zipSync({ 'xl/sharedStrings.xml': new Uint8Array(30 * 1024 * 1024) });
+		// Tamaño comprimido del encabezado local en 0: un lector por streaming ve un archivo
+		// vacío, pero ExcelJS (JSZip) usa el directorio central y lo descomprime entero.
+		zip.fill(0, 18, 22);
+		const file = new File([zip], 'bomba.xlsx');
+		await expect(readTable(file)).rejects.toThrow('demasiado grande al descomprimirlo');
+	});
+
 	it('rechaza formatos no soportados', async () => {
 		await expect(readTable(new File(['x'], 'preguntas.pdf'))).rejects.toThrow(
 			'Formato no soportado'
