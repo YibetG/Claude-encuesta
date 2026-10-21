@@ -21,7 +21,12 @@
 		<nav class="text-sm text-slate-500">
 			<a href={resolve('/admin/(app)/clientes')} class="hover:underline">Clientes</a> / {c.name}
 		</nav>
-		<h1 class={ui.pageTitle}>{c.name}</h1>
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<h1 class={ui.pageTitle}>{c.name}</h1>
+			<a href={resolve('/admin/(app)/clientes/[id]/informe', { id: c.id })} class={ui.btnPrimary}
+				>Ver informe general</a
+			>
+		</div>
 	</div>
 
 	{#if page.url.searchParams.get('creado') === '1'}

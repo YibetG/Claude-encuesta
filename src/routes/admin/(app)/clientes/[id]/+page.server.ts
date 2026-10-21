@@ -1,11 +1,10 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.ts';
 import { clientSchema, fieldErrors, themeSchema } from '#lib/schemas/assessment.ts';
 import {
 	ClientInUseError,
 	clientNameTaken,
 	deleteClient,
-	getClient,
 	LOGO_MAX_BYTES,
 	LogoError,
 	renameClient,
@@ -13,16 +12,9 @@ import {
 	setClientTheme
 } from '#lib/server/services/clients.ts';
 import { listAssessments } from '#lib/server/services/assessments.ts';
-import { assertUuid } from '#lib/server/forms.ts';
+import { requireClient } from '#lib/server/route-helpers.ts';
 import { clientLogoUrl } from '#lib/server/logo.ts';
 import type { Actions, PageServerLoad } from './$types';
-
-function requireClient(id: string) {
-	assertUuid(id);
-	const client = getClient(db, id);
-	if (!client) error(404, 'Cliente no encontrado');
-	return client;
-}
 
 export const load: PageServerLoad = ({ params }) => {
 	const c = requireClient(params.id);

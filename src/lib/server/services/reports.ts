@@ -73,6 +73,43 @@ export type Report = {
 
 const ratio = (a: number, b: number) => (b > 0 ? a / b : null);
 
+/** Acierto de una persona: preguntas de selección con la opción esperada / las que respondió. */
+export type ParticipantScore = { correct: number; answered: number; rate: number | null };
+
+/**
+ * Porcentaje de acierto por participante que entregó (participantId → acierto). Las preguntas
+ * de selección que no respondió (opcionales) no cuentan en contra.
+ */
+export function participantScores(db: DB, assessmentId: string): Map<string, ParticipantScore> {
+	const expected = new Set(
+		listQuestionsForAdmin(db, assessmentId).flatMap((q) =>
+			q.options.filter((o) => o.isCorrect).map((o) => o.id)
+		)
+	);
+	const rows = db
+		.select({ participantId: submissions.participantId, optionId: answers.optionId })
+		.from(answers)
+		.innerJoin(submissions, eq(submissions.id, answers.submissionId))
+		.where(
+			and(
+				eq(submissions.assessmentId, assessmentId),
+				isNotNull(submissions.submittedAt),
+				isNotNull(answers.optionId)
+			)
+		)
+		.all();
+
+	const scores = new Map<string, ParticipantScore>();
+	for (const r of rows) {
+		const s = scores.get(r.participantId) ?? { correct: 0, answered: 0, rate: null };
+		s.answered++;
+		if (expected.has(r.optionId!)) s.correct++;
+		s.rate = s.correct / s.answered;
+		scores.set(r.participantId, s);
+	}
+	return scores;
+}
+
 export function buildReport(db: DB, assessmentId: string, filters: ReportFilters = {}): Report {
 	const participants = listParticipants(db, assessmentId).filter(
 		(p) =>

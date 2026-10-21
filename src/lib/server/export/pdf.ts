@@ -11,7 +11,7 @@ import { FREQUENCY_LABELS, type StoredAnalysis } from '../../ai-analysis';
 // de las preguntas abiertas. Se genera en el servidor con pdfmake (gráficos vectoriales).
 
 // Paleta (validada para contraste): acento para lo destacado, gris para el resto.
-const C = {
+export const C = {
 	ink: '#0e1726',
 	muted: '#5b6474',
 	accent: '#0b7a6e',
@@ -28,7 +28,7 @@ const FONT_DIR = resolve(dirname(require.resolve('pdfmake')), '..', 'fonts', 'Ro
 const font = (f: string) => join(FONT_DIR, f);
 
 let configured = false;
-function configure() {
+export function configurePdf() {
 	if (configured) return;
 	pdfmake.setFonts({
 		Roboto: {
@@ -45,11 +45,11 @@ function configure() {
 
 // ---- Piezas -----------------------------------------------------------------
 
-const BAR_W = 190;
+export const BAR_W = 190;
 const BAR_H = 9;
 
 /** Barra horizontal vectorial (extremo redondeado), proporcional a `rate`. */
-function bar(rate: number, highlight: boolean, accent: string = C.accent): Content {
+export function bar(rate: number, highlight: boolean, accent: string = C.accent): Content {
 	const w = Math.max(rate * BAR_W, rate > 0 ? 1.5 : 0);
 	return {
 		canvas: w
@@ -58,7 +58,7 @@ function bar(rate: number, highlight: boolean, accent: string = C.accent): Conte
 	};
 }
 
-const noBorders = {
+export const noBorders = {
 	hLineWidth: () => 0,
 	vLineWidth: () => 0,
 	paddingLeft: () => 0,
@@ -67,7 +67,7 @@ const noBorders = {
 	paddingBottom: () => 3
 };
 
-const lightRows = {
+export const lightRows = {
 	hLineWidth: (i: number, node: { table: { body: unknown[] } }) =>
 		i === 0 || i === node.table.body.length ? 0 : 0.5,
 	vLineWidth: () => 0,
@@ -78,7 +78,7 @@ const lightRows = {
 	paddingBottom: () => 4
 };
 
-function statRow(items: { label: string; value: string }[]): Content {
+export function statRow(items: { label: string; value: string }[]): Content {
 	return {
 		columns: items.map((it) => ({
 			stack: [
@@ -369,6 +369,6 @@ export async function buildPdf(
 	report: Report,
 	analyses: Map<string, StoredAnalysis>
 ): Promise<Buffer> {
-	configure();
+	configurePdf();
 	return pdfmake.createPdf(buildPdfDefinition(meta, report, analyses)).getBuffer();
 }

@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { db } from './db/index';
 import { getAssessment } from './services/assessments';
+import { getClient } from './services/clients';
 import { distinctAreasAndCargos } from './services/participants';
 import { assertUuid } from './forms';
 import type { ReportFilters } from './services/reports';
@@ -11,6 +12,14 @@ export function requireAssessment(id: string) {
 	const a = getAssessment(db, id);
 	if (!a) error(404, 'Assessment no encontrado');
 	return a;
+}
+
+/** Carga el cliente de la URL o responde 404. */
+export function requireClient(id: string) {
+	assertUuid(id);
+	const c = getClient(db, id);
+	if (!c) error(404, 'Cliente no encontrado');
+	return c;
 }
 
 /**
