@@ -10,12 +10,12 @@ import { FREQUENCY_LABELS, type StoredAnalysis } from '../../ai-analysis';
 // Informe PDF: portada, resumen, gráfico y tabla por pregunta, y el análisis con IA
 // de las preguntas abiertas. Se genera en el servidor con pdfmake (gráficos vectoriales).
 
-// Paleta (validada para contraste): acento para lo destacado, gris para el resto.
+// Paleta SISTEL (validada para contraste): acento para lo destacado, gris para el resto.
 export const C = {
-	ink: '#0e1726',
+	ink: '#1a1c23',
 	muted: '#5b6474',
-	accent: '#0b7a6e',
-	accentSoft: '#e2f3f0',
+	accent: '#374ef7',
+	accentSoft: '#eef1fe',
 	bar: '#94a3b8',
 	rule: '#e2e8f0'
 };

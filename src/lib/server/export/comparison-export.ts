@@ -129,7 +129,7 @@ export async function buildComparisonExcel(
 				`   ${o.isExpected ? '✓ ' : ''}${safeText(o.text)}`,
 				...o.rates.map(pct)
 			]);
-			row.font = { color: { argb: o.isExpected ? 'FF0B7A6E' : 'FF5B6474' } };
+			row.font = { color: { argb: o.isExpected ? 'FF2A3CC9' : 'FF5B6474' } };
 			formatRow(row, range(3));
 		}
 	}

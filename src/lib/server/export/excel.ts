@@ -15,7 +15,7 @@ const HEADER_FILL: ExcelJS.Fill = {
 const EXPECTED_FILL: ExcelJS.Fill = {
 	type: 'pattern',
 	pattern: 'solid',
-	fgColor: { argb: 'FFE0E7FF' }
+	fgColor: { argb: 'FFEEF1FE' }
 };
 const PCT = '0%';
 

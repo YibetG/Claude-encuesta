@@ -6,8 +6,9 @@
 // A partir de cada color se derivan los tonos que usan las pantallas (más claros y más oscuros)
 // y se aplican sobrescribiendo las variables de Tailwind (--color-…) en el contenedor.
 
-export const DEFAULT_PRIMARY = '#0e1726';
-export const DEFAULT_ACCENT = '#0b7a6e';
+// Colores de la plataforma (SISTEL): negro azul petróleo y azul tech.
+export const DEFAULT_PRIMARY = '#1a1c23';
+export const DEFAULT_ACCENT = '#374ef7';
 export const MIN_CONTRAST = 4.5;
 
 const HEX_RE = /^#[0-9a-f]{6}$/i;

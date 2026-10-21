@@ -2,39 +2,43 @@
 @plugin '@tailwindcss/forms';
 
 /* Tipografías incluidas en la app (la CSP no permite cargar fuentes de terceros). */
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/manrope';
+@import '@fontsource-variable/mulish';
+@import '@fontsource-variable/rubik';
 
 /*
- * Identidad visual:
- * - ink: azul noche de la barra lateral y los títulos.
- * - brand: verde azulado del acento (acciones principales, "opción esperada", progreso).
- * - canvas: fondo general gris muy claro.
+ * Identidad visual SISTEL (brandboard):
+ * - ink: "negro azul petróleo" (#1a1c23) de la barra lateral y los títulos; #2a303f es el gris oscuro.
+ * - brand: "azul tech" (#374ef7), color de acento (acciones principales, "opción esperada", progreso).
+ *   Con texto blanco encima tiene contraste 5,8:1; brand-700 (#2a3cc9) se usa para texto sobre blanco.
+ * - canvas: "gris claro" (#eaedef) del fondo general.
+ * - Tipografía: Mulish para textos y Rubik para títulos.
  * Las advertencias usan la escala amber de Tailwind.
  */
 @theme {
-	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-	--font-display: 'Manrope Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-sans: 'Mulish Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Rubik Variable', 'Mulish Variable', ui-sans-serif, system-ui, sans-serif;
+	/* Los títulos usan font-extrabold: en Rubik se ve muy pesado, el brandboard usa Rubik Bold (700). */
+	--font-weight-extrabold: 700;
 
-	--color-brand-50: #e2f3f0;
-	--color-brand-100: #c6e8e2;
-	--color-brand-200: #9ed6cc;
-	--color-brand-300: #6fbfb2;
-	--color-brand-400: #3da394;
-	--color-brand-500: #168c7e;
-	--color-brand-600: #0b7a6e;
-	--color-brand-700: #075e55;
-	--color-brand-800: #064a43;
-	--color-brand-900: #053b36;
+	--color-brand-50: #eef1fe;
+	--color-brand-100: #dfe4fe;
+	--color-brand-200: #c3ccfc;
+	--color-brand-300: #9aa9fa;
+	--color-brand-400: #6b7ef8;
+	--color-brand-500: #4f63f7;
+	--color-brand-600: #374ef7;
+	--color-brand-700: #2a3cc9;
+	--color-brand-800: #22309f;
+	--color-brand-900: #1d2a7d;
 
-	--color-ink-300: #c9d1de;
-	--color-ink-400: #9fb0c8;
-	--color-ink-700: #263650;
-	--color-ink-800: #1f2d45;
-	--color-ink-900: #1c2940;
-	--color-ink-950: #0e1726;
+	--color-ink-300: #ced3d8;
+	--color-ink-400: #9aa1ae;
+	--color-ink-700: #3a4152;
+	--color-ink-800: #2a303f;
+	--color-ink-900: #22252e;
+	--color-ink-950: #1a1c23;
 
-	--color-canvas: #f4f6f9;
+	--color-canvas: #eaedef;
 }
 
 body {

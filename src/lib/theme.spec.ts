@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { contrast, isHexColor, readableWithWhite, themeStyle } from './theme';
+import {
+	contrast,
+	DEFAULT_ACCENT,
+	DEFAULT_PRIMARY,
+	isHexColor,
+	readableWithWhite,
+	themeStyle
+} from './theme';
 
 describe('colores del cliente', () => {
 	it('valida el formato #RRGGBB', () => {
@@ -17,6 +24,10 @@ describe('colores del cliente', () => {
 	it('exige colores oscuros para poner texto blanco encima', () => {
 		expect(readableWithWhite('#0e1726')).toBe(true);
 		expect(readableWithWhite('#0b7a6e')).toBe(true);
+		// Colores de la plataforma (SISTEL): negro azul petróleo y azul tech.
+		expect(readableWithWhite(DEFAULT_PRIMARY)).toBe(true);
+		expect(readableWithWhite(DEFAULT_ACCENT)).toBe(true);
+		expect(contrast(DEFAULT_ACCENT, '#ffffff')).toBeGreaterThan(5.5);
 		expect(readableWithWhite('#f5c400')).toBe(false); // amarillo claro
 		expect(readableWithWhite('#7fb3ff')).toBe(false); // celeste
 	});
