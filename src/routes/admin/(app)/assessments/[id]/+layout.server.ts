@@ -2,7 +2,9 @@ import { count, eq } from 'drizzle-orm';
 import { APP_URL } from '$app/env/private';
 import { db } from '#lib/server/db/index.ts';
 import { participants } from '#lib/server/db/schema.ts';
-import { countQuestions, hasResponses } from '#lib/server/services/assessments.ts';
+import { countQuestions } from '#lib/server/services/assessments.ts';
+import { questionsLockReason } from '#lib/server/services/questions.ts';
+import { seriesMembers } from '#lib/server/services/series.ts';
 import { publicLink } from '#lib/server/services/invitations.ts';
 import { logoUrl } from '#lib/server/logo.ts';
 import { getBrand } from '#lib/server/services/clients.ts';
@@ -12,6 +14,8 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = ({ params }) => {
 	const a = requireAssessment(params.id);
 	const brand = getBrand(db, a.clientId);
+	const lockReason = questionsLockReason(db, a.id);
+	const members = seriesMembers(db, a);
 
 	return {
 		// Campos explícitos: el hash de la contraseña de acceso nunca sale del servidor.
@@ -39,7 +43,13 @@ export const load: LayoutServerLoad = ({ params }) => {
 				: null,
 			logoUrl: logoUrl(a.slug, brand)
 		},
-		locked: hasResponses(db, a.id),
+		lockReason,
+		locked: lockReason !== null,
+		// Serie de mediciones (solo si hay más de una): para la pestaña Mediciones.
+		series:
+			members.length > 1
+				? members.map((m) => ({ id: m.id, title: m.title, order: m.seriesOrder, status: m.status }))
+				: null,
 		questionCounts: countQuestions(db, a.id),
 		participantCount:
 			db.select({ n: count() }).from(participants).where(eq(participants.assessmentId, a.id)).get()

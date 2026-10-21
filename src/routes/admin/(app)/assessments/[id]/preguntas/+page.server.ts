@@ -1,10 +1,10 @@
 import { fail } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.ts';
 import { requireAssessment } from '#lib/server/route-helpers.ts';
-import { hasResponses } from '#lib/server/services/assessments.ts';
 import {
 	listQuestionsForAdmin,
 	QuestionsLockedError,
+	questionsLockReason,
 	replaceQuestions,
 	toQuestionInputs
 } from '#lib/server/services/questions.ts';
@@ -98,9 +98,8 @@ export const actions: Actions = {
 	 */
 	leerWord: async ({ request, params }) => {
 		const a = requireAssessment(params.id);
-		if (hasResponses(db, a.id)) {
-			return fail(409, { wordErrors: ['Este assessment ya tiene respuestas.'] });
-		}
+		const locked = questionsLockReason(db, a.id);
+		if (locked) return fail(409, { wordErrors: [locked] });
 		const file = (await request.formData()).get('documento');
 		if (!(file instanceof File) || file.size === 0) {
 			return fail(400, { wordErrors: ['Seleccione un documento Word (.docx).'] });

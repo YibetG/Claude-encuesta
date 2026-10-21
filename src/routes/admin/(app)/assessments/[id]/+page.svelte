@@ -6,6 +6,7 @@
 	import { ui } from '#lib/ui.ts';
 	import { resolve } from '$app/paths';
 	import { DEFAULT_ACCENT, DEFAULT_PRIMARY } from '#lib/theme.ts';
+	import StatusBadge from '#lib/components/StatusBadge.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -57,6 +58,12 @@
 	{#if page.url.searchParams.get('duplicado') === '1'}
 		<p class={ui.alertSuccess} role="status">
 			Se creó la copia en borrador. Defina una contraseña de acceso antes de publicarla.
+		</p>
+	{/if}
+	{#if page.url.searchParams.get('medicion') === '1'}
+		<p class={ui.alertSuccess} role="status">
+			Se creó la nueva medición con las mismas preguntas y participantes. Revise las fechas, defina
+			la contraseña de acceso, agregue personas nuevas si hace falta y publíquela.
 		</p>
 	{/if}
 	{#if form?.statusChanged}
@@ -128,6 +135,65 @@
 				</form>
 			{/if}
 		</div>
+	</section>
+
+	<!-- Mediciones: la misma encuesta antes y después (o en varios momentos) -->
+	<section class={ui.card} aria-labelledby="mediciones-titulo">
+		<h2 id="mediciones-titulo" class={ui.sectionTitle}>Mediciones</h2>
+		{#if data.series}
+			<p class="mt-1 text-sm text-slate-600">
+				Este assessment es la medición {data.series.find((m) => m.id === a.id)?.order} de una serie. Todas
+				comparten las mismas preguntas para poder compararlas.
+			</p>
+			<ol class="mt-3 divide-y divide-slate-100">
+				{#each data.series as m (m.id)}
+					<li class="flex flex-wrap items-center gap-3 py-2 text-sm">
+						<span class="w-24 shrink-0 text-slate-600">Medición {m.order}</span>
+						{#if m.id === a.id}
+							<span class="min-w-0 flex-1 font-semibold">{m.title} (esta)</span>
+						{:else}
+							<a
+								href={resolve('/admin/(app)/assessments/[id]', { id: m.id })}
+								class="min-w-0 flex-1 font-medium hover:underline">{m.title}</a
+							>
+						{/if}
+						<StatusBadge status={m.status} />
+					</li>
+				{/each}
+			</ol>
+		{:else}
+			<p class="mt-1 text-sm text-slate-600">
+				¿Va a aplicar esta misma encuesta después de una formación, o en varios momentos? Cree la
+				siguiente medición y luego compare los resultados.
+			</p>
+		{/if}
+		<div class="mt-4 flex flex-wrap gap-2">
+			<form
+				method="POST"
+				action="?/medicion"
+				use:enhance={({ cancel }) => {
+					if (
+						!confirm(
+							'Se creará la siguiente medición con las mismas preguntas y participantes. Desde ese momento las preguntas de todas las mediciones quedan bloqueadas para poder compararlas. ¿Continuar?'
+						)
+					)
+						cancel();
+				}}
+			>
+				<button class={data.series ? ui.btnSecondary : ui.btnPrimary}
+					>Crear siguiente medición</button
+				>
+			</form>
+			{#if data.series}
+				<a
+					href={resolve('/admin/(app)/assessments/[id]/mediciones', { id: a.id })}
+					class={ui.btnPrimary}>Ver comparativo</a
+				>
+			{/if}
+		</div>
+		{#if form?.medicionError}<p class="mt-2 {ui.fieldError}" role="alert">
+				{form.medicionError}
+			</p>{/if}
 	</section>
 
 	<!-- Contraseña de acceso -->

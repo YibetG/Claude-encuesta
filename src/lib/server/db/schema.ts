@@ -98,6 +98,13 @@ export const assessments = sqliteTable('assessments', {
 	inviteSubject: text('invite_subject').notNull().default(''),
 	inviteBody: text('invite_body').notNull().default(''),
 	duplicatedFromId: text('duplicated_from_id'),
+	/**
+	 * Serie de mediciones (antes, después, seguimiento…): mismas preguntas aplicadas en distintos
+	 * momentos para compararlas. Es el id de la primera medición; nulo = no es parte de una serie.
+	 */
+	seriesId: text('series_id'),
+	/** Número de la medición dentro de la serie (1, 2, 3…). */
+	seriesOrder: integer('series_order'),
 	createdById: text('created_by_id').references(() => adminUsers.id, { onDelete: 'set null' }),
 	createdAt: createdAt(),
 	updatedAt: integer('updated_at', { mode: 'timestamp_ms' })

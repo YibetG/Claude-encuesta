@@ -6,6 +6,7 @@ import {
 	fieldErrors
 } from '#lib/schemas/assessment.ts';
 import {
+	countQuestions,
 	deleteAssessment,
 	deletionSummary,
 	duplicateAssessment,
@@ -16,6 +17,7 @@ import {
 	updateAssessment
 } from '#lib/server/services/assessments.ts';
 import { clientExists, clientOptions } from '#lib/server/services/clients.ts';
+import { createNextMeasurement } from '#lib/server/services/series.ts';
 import { assessmentToForm, readAssessmentForm, timezoneOptions } from '#lib/server/forms.ts';
 import { requireAssessment } from '#lib/server/route-helpers.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -107,6 +109,17 @@ export const actions: Actions = {
 		}
 		deleteAssessment(db, a, locals.admin!.id, getClientAddress());
 		redirect(303, '/admin?eliminado=1');
+	},
+
+	/** Siguiente medición de la serie (misma encuesta, para comparar antes y después). */
+	medicion: ({ params, locals, getClientAddress }) => {
+		const a = requireAssessment(params.id);
+		if (countQuestions(db, a.id).total === 0) {
+			return fail(400, { medicionError: 'Agregue preguntas antes de crear otra medición.' });
+		}
+		const next = createNextMeasurement(db, a.id, locals.admin!.id, getClientAddress());
+		if (!next) error(404, 'Assessment no encontrado');
+		redirect(303, `/admin/assessments/${next.id}?medicion=1`);
 	},
 
 	duplicar: ({ params, locals, getClientAddress }) => {

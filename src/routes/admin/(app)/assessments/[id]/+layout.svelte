@@ -26,7 +26,15 @@
 		{
 			href: resolve('/admin/(app)/assessments/[id]/reportes', { id: data.assessment.id }),
 			label: 'Reportes'
-		}
+		},
+		...(data.series
+			? [
+					{
+						href: resolve('/admin/(app)/assessments/[id]/mediciones', { id: data.assessment.id }),
+						label: `Mediciones (${data.series.length})`
+					}
+				]
+			: [])
 	]);
 </script>
 

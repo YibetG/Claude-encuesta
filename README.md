@@ -91,13 +91,8 @@ Los secretos van solo en `.env`, que nunca se sube al repositorio.
    revisar, y solo se guardan al pulsar **Guardar preguntas**. Hay plantilla Word descargable.
    Cuando alguien empieza a responder, las preguntas quedan bloqueadas; para cambiarlas,
    duplique el assessment.
-3. **Contraseña de acceso, logo del cliente y publicación** (pestaña General). La
-   contraseña se puede generar al azar, ver mientras se escribe y volver a mostrar después.
-   El logo aparece al participante y en la portada del PDF (en el PDF solo PNG o JPG).
-   **Colores del cliente:** un color principal (franja superior) y uno de acento (botones,
-   progreso, selección) reemplazan los de la plataforma en las pantallas del participante y
-   en el PDF. Se recomiendan tonos oscuros (texto blanco con contraste ≥ 4,5:1); un tono más claro
-   se permite, con advertencia y vista previa.
+3. **Contraseña de acceso y publicación** (pestaña General). La contraseña se puede generar
+   al azar, ver mientras se escribe y volver a mostrar después.
 4. **Participantes:** manual o con la plantilla de Excel/CSV (nombre, email, área, cargo y
    columnas adicionales).
 5. **Invitaciones:** plantilla editable con variables (`{{nombre}}`, `{{enlace}}`,
@@ -105,6 +100,31 @@ Los secretos van solo en `.env`, que nunca se sube al repositorio.
    La contraseña vigente se incluye automáticamente.
 6. **Reportes:** resumen, alineación por pregunta con gráficos, respuestas abiertas, tabla
    por participante, filtros por área y cargo, análisis con IA y descargas en Excel y PDF.
+
+### Clientes
+
+- Menú **Clientes**: cada cliente tiene nombre, **logo** y **colores** (principal y de acento).
+  Todos sus assessments los heredan, en las pantallas del participante y en los PDF. Se
+  recomiendan tonos oscuros (texto blanco con contraste ≥ 4,5:1); uno más claro se permite con
+  advertencia y vista previa. El cliente se elige en _Datos generales_ del assessment.
+- **Informe general del cliente:** consolida sus assessments (sin borradores): personas,
+  participación, alineación y **acierto** promedio por assessment, por área y por cargo, con
+  descarga en Excel y PDF. Un cliente con assessments no se puede eliminar.
+
+### Mediciones (antes y después)
+
+- En la pestaña General, **Crear siguiente medición** copia el assessment con sus preguntas,
+  cliente y participantes (sin contraseña, en borrador, con fechas propuestas). Se pueden crear
+  tantas mediciones como se necesite y agregar personas nuevas en cada una.
+- Desde ese momento las preguntas de toda la serie quedan bloqueadas, para que se puedan comparar
+  pregunta por pregunta.
+- Pestaña **Mediciones**: comparativo de las mediciones elegidas, con dos modos: solo las
+  personas que respondieron todas (identificadas por su correo) o todas las entregas. Muestra
+  el acierto y la alineación con la diferencia en puntos porcentuales, por pregunta (con cuántos
+  mejoraron o empeoraron), por persona, por área y por cargo, y las respuestas abiertas lado a
+  lado. Se descarga en Excel y PDF.
+- **Acierto** de una persona: % de las preguntas de selección que respondió con la opción
+  esperada. Los participantes no ven sus resultados.
 
 ## Correo
 

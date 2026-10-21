@@ -211,12 +211,9 @@
 {/if}
 
 {#if data.locked}
-	<!-- Vista de solo lectura: ya hay respuestas -->
+	<!-- Vista de solo lectura: ya hay respuestas o el assessment es parte de una serie -->
 	<div class="{ui.alertWarning} flex flex-wrap items-center justify-between gap-3">
-		<p>
-			Este assessment ya tiene respuestas, así que las preguntas no se pueden modificar. Para hacer
-			cambios, duplíquelo y edite la copia.
-		</p>
+		<p>{data.lockReason}</p>
 		<form method="POST" action="{generalHref}?/duplicar">
 			<button class={ui.btnSecondary}>Duplicar assessment</button>
 		</form>

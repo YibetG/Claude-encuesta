@@ -1,16 +1,27 @@
 import { asc, eq, inArray } from 'drizzle-orm';
-import type { DB } from '../db/client';
+import type { DB, Executor } from '../db/client';
 import { questionOptions, questions } from '../db/schema';
 import { audit, type AuditAction } from '../security/audit';
 import { hasResponses } from './assessments';
+import { inSharedSeries } from './series';
 import type { QuestionInput } from '../../schemas/question';
 
+export const LOCKED_BY_RESPONSES =
+	'Este assessment ya tiene respuestas: las preguntas no se pueden modificar. Duplíquelo para hacer cambios.';
+export const LOCKED_BY_SERIES =
+	'Este assessment es parte de una serie de mediciones: todas comparten las mismas preguntas para poder compararlas, así que no se pueden modificar. Duplíquelo para hacer cambios.';
+
 export class QuestionsLockedError extends Error {
-	constructor() {
-		super(
-			'Este assessment ya tiene respuestas: las preguntas no se pueden modificar. Duplíquelo para hacer cambios.'
-		);
+	constructor(message = LOCKED_BY_RESPONSES) {
+		super(message);
 	}
+}
+
+/** Motivo por el que las preguntas no se pueden modificar, o `null` si se pueden. */
+export function questionsLockReason(db: Executor, assessmentId: string): string | null {
+	if (inSharedSeries(db, assessmentId)) return LOCKED_BY_SERIES;
+	if (hasResponses(db, assessmentId)) return LOCKED_BY_RESPONSES;
+	return null;
 }
 
 export type AdminQuestion = {
@@ -83,7 +94,8 @@ export function replaceQuestions(
 ): void {
 	db.transaction((tx) => {
 		// Se verifica dentro de la transacción para que no se cuele una respuesta en medio.
-		if (hasResponses(tx, assessmentId)) throw new QuestionsLockedError();
+		const locked = questionsLockReason(tx, assessmentId);
+		if (locked) throw new QuestionsLockedError(locked);
 
 		tx.delete(questions).where(eq(questions.assessmentId, assessmentId)).run();
 

@@ -3,6 +3,14 @@
 export const DEFAULT_TIMEZONE = 'America/Bogota';
 
 /** "83%" / "61,1%" con formato colombiano; "—" cuando no hay dato. */
+/** Diferencia entre dos proporciones, en puntos porcentuales: "+12 pp", "−5 pp", "0 pp" o "—". */
+export function formatPoints(delta: number | null): string {
+	if (delta === null) return '—';
+	const pp = Math.round(delta * 100);
+	if (pp === 0) return '0 pp';
+	return `${pp > 0 ? '+' : '−'}${Math.abs(pp)} pp`;
+}
+
 export function formatPercent(rate: number | null, digits = 0): string {
 	if (rate === null) return '—';
 	return new Intl.NumberFormat('es-CO', {
